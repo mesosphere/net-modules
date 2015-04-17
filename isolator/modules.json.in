@@ -1,0 +1,22 @@
+{
+  "libraries": [
+    {
+      "file": "@abs_top_builddir@/.libs/libmetaswitch_network_isolator.@LIB_EXT@",
+      "modules": [
+        {
+          "name": "com_mesosphere_mesos_MetaswitchNetworkIsolator",
+          "parameters": [
+            {
+              "key": "initialization_command",
+              "value": "echo python /path/to/initialization_script.py arg1 arg2 >> /tmp/test1"
+            },
+            {
+              "key": "cleanup_command",
+              "value": "echo python /path/to/cleanup_script.py arg1 arg2 >> /tmp/test1"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
