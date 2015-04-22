@@ -17,12 +17,12 @@ def cleanup():
 
 if __name__ == "__main__":
 
-    cmd = sys.argv[0]
+    cmd = sys.argv[1]
     if cmd == "initialize":
         initialize()
     elif cmd == "isolate":
         isolate()
-    elif cmd == cleanup():
+    elif cmd == "cleanup":
         cleanup()
     else:
         assert False, "Invalid command."
