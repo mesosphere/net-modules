@@ -36,6 +36,7 @@ using mesos::slave::Isolator;
 const char* initializationKey = "initialization_command";
 const char* cleanupKey = "cleanup_command";
 const char* isolateKey = "isolate_command";
+const char* pythonPath = "/usr/bin/python";
 
 class MetaswitchNetworkIsolatorProcess : public mesos::slave::IsolatorProcess
 {
@@ -77,13 +78,13 @@ public:
   {
     foreach (const Parameter& parameter, parameters.parameter()) {
       if (parameter.key() == isolateKey) {
-        path = "/usr/bin/python"
-        std::vector<std::string> argv(4);
-        argv[0] = parameter.value()
-        argv[1] = "isolate";
-        argv[2] = pid;
-        argv[3] = containerId;
-        Try<process::Subprocess> child = process::subprocess(path, argv);
+        std::vector<std::string> argv(5);
+        argv[0] = "python";
+        argv[1] = parameter.value();
+        argv[2] = "isolate";
+        argv[3] = pid;
+        argv[4] = containerId.value();
+        Try<process::Subprocess> child = process::subprocess(pythonPath, argv);
         CHECK_SOME(child);
         waitpid(child.get().pid(), NULL, 0);
         break;
