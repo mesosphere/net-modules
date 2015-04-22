@@ -35,6 +35,7 @@ using mesos::slave::Isolator;
 
 const char* initializationKey = "initialization_command";
 const char* cleanupKey = "cleanup_command";
+const char* isolateKey = "isolate_command";
 
 class MetaswitchNetworkIsolatorProcess : public mesos::slave::IsolatorProcess
 {
@@ -74,6 +75,14 @@ public:
       const ContainerID& containerId,
       pid_t pid)
   {
+    foreach (const Parameter& parameter, parameters.parameter()) {
+      if (parameter.key() == isolateKey) {
+        Try<process::Subprocess> child = process::subprocess(parameter.value());
+        CHECK_SOME(child);
+        waitpid(child.get().pid(), NULL, 0);
+        break;
+      }
+    }
     return Nothing();
   }
 
