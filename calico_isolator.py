@@ -55,7 +55,7 @@ def initialize():
 
 
 def isolate(cpid, cont_id):
-    _log.debug("Isolating task %s.", cpid)
+    _log.debug("Isolating executor with Container ID %s, PID %s.", cont_id, cpid)
 
     ip = assign_ipv4()
     hostname = socket.gethostname()

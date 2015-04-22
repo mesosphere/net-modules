@@ -82,7 +82,7 @@ public:
         argv[0] = "python";
         argv[1] = parameter.value();
         argv[2] = "isolate";
-        argv[3] = pid;
+        argv[3] = std::to_string(pid);
         argv[4] = containerId.value();
         Try<process::Subprocess> child = process::subprocess(pythonPath, argv);
         CHECK_SOME(child);
