@@ -86,9 +86,9 @@ if __name__ == "__main__":
     setup_logging(LOGFILE)
     cmd = sys.argv[1]
     if cmd == "initialize":
-        initialize(sys.argv[2], sys.argv[3])
+        initialize()
     elif cmd == "isolate":
-        isolate()
+        isolate(sys.argv[2], sys.argv[3])
     elif cmd == "cleanup":
         cleanup()
     else:
