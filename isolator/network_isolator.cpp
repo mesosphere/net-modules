@@ -77,7 +77,13 @@ public:
   {
     foreach (const Parameter& parameter, parameters.parameter()) {
       if (parameter.key() == isolateKey) {
-        Try<process::Subprocess> child = process::subprocess(parameter.value());
+        path = "/usr/bin/python"
+        std::vector<std::string> argv(4);
+        argv[0] = parameter.value()
+        argv[1] = "isolate";
+        argv[2] = pid;
+        argv[3] = containerId;
+        Try<process::Subprocess> child = process::subprocess(path, argv);
         CHECK_SOME(child);
         waitpid(child.get().pid(), NULL, 0);
         break;

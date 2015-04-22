@@ -8,15 +8,15 @@
           "parameters": [
             {
               "key": "initialization_command",
-              "value": "python /home/sjc/metaswitch-modules/calico_isolator.py initialize >> /tmp/test1"
+              "value": "python /home/sjc/metaswitch-modules/calico_isolator.py initialize"
             },
             {
               "key": "isolate_command",
-              "value": "python /home/sjc/metaswitch-modules/calico_isolator.py isolate >> /tmp/test1"
+              "value": "/home/sjc/metaswitch-modules/calico_isolator.py"
             },
             {
               "key": "cleanup_command",
-              "value": "python /home/sjc/metaswitch-modules/calico_isolator.py cleanup >> /tmp/test1"
+              "value": "python /home/sjc/metaswitch-modules/calico_isolator.py cleanup"
             }
           ]
         }
