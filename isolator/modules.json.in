@@ -16,7 +16,7 @@
             },
             {
               "key": "cleanup_command",
-              "value": "python /home/sjc/metaswitch-modules/calico_isolator.py cleanup"
+              "value": "/home/sjc/metaswitch-modules/calico_isolator.py"
             }
           ]
         }

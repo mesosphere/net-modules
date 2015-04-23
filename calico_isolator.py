@@ -63,6 +63,7 @@ def isolate(cpid, cont_id):
 
     endpoint = netns.set_up_endpoint(ip, cpid,
                                      next_hop_ips=next_hop_ips,
+                                     in_container=False,
                                      veth_name="eth0",
                                      proc_alias="proc")
     profile = "mesos"
@@ -78,9 +79,32 @@ def isolate(cpid, cont_id):
     _log.info("Finished network for container %s, IP=%s", cont_id, ip)
 
 
-def cleanup():
-    print "Empty cleanup()."
+def cleanup(cont_id):
+    _log.debug("Cleaning executor with Container ID %s.", cont_id)
 
+    hostname = socket.gethostname()
+    ep_id = datastore.get_ep_id_from_cont(hostname, cont_id)
+    endpoint = datastore.get_endpoint(hostname, cont_id, ep_id)
+
+    # Unassign any address it has.
+    for net in endpoint.ipv4_nets | endpoint.ipv6_nets:
+        assert(net.size == 1)
+        ip = net.ip
+        _log.debug("Attempting to un-allocate IP %s", ip)
+        pools = datastore.get_ip_pools("v%s" % ip.version)
+        for pool in pools:
+            if ip in pool:
+                # Ignore failure to unassign address, since we're not
+                # enforcing assignments strictly in datastore.py.
+                _log.debug("Un-allocate IP %s from pool %s", ip, pool)
+                datastore.unassign_address(pool, ip)
+
+    # Remove the endpoint
+    _log.debug("Removing veth for endpoint %s", ep_id)
+    netns.remove_endpoint(ep_id)
+
+    # Remove the container from the datastore.
+    datastore.remove_container(hostname, cont_id)
 
 if __name__ == "__main__":
     setup_logging(LOGFILE)
@@ -90,6 +114,6 @@ if __name__ == "__main__":
     elif cmd == "isolate":
         isolate(sys.argv[2], sys.argv[3])
     elif cmd == "cleanup":
-        cleanup()
+        cleanup(sys.argv[2])
     else:
         assert False, "Invalid command."

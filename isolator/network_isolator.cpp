@@ -28,6 +28,7 @@
 #include <process/subprocess.hpp>
 
 #include <stout/try.hpp>
+#include <stout/stringify.hpp>
 
 using namespace mesos;
 
@@ -82,7 +83,7 @@ public:
         argv[0] = "python";
         argv[1] = parameter.value();
         argv[2] = "isolate";
-        argv[3] = std::to_string(pid);
+        argv[3] = stringify(pid);
         argv[4] = containerId.value();
         Try<process::Subprocess> child = process::subprocess(pythonPath, argv);
         CHECK_SOME(child);
@@ -117,7 +118,12 @@ public:
   {
     foreach (const Parameter& parameter, parameters.parameter()) {
       if (parameter.key() == cleanupKey) {
-        Try<process::Subprocess> child = process::subprocess(parameter.value());
+        std::vector<std::string> argv(4);
+        argv[0] = "python";
+        argv[1] = parameter.value();
+        argv[2] = "cleanup";
+        argv[3] = containerId.value();
+        Try<process::Subprocess> child = process::subprocess(pythonPath, argv);
         CHECK_SOME(child);
         waitpid(child.get().pid(), NULL, 0);
         break;
