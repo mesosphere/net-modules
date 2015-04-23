@@ -64,7 +64,7 @@ def isolate(cpid, cont_id):
     endpoint = netns.set_up_endpoint(ip, cpid,
                                      next_hop_ips=next_hop_ips,
                                      veth_name="eth0",
-                                     proc_alias="/proc")
+                                     proc_alias="proc")
     profile = "mesos"
     if not datastore.profile_exists(profile):
         _log.info("Autocreating profile %s", profile)

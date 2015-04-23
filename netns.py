@@ -115,6 +115,8 @@ def set_up_endpoint(ip, cpid, next_hop_ips,
         except CalledProcessError:
             pass  # Only need to do this once.
     _log.debug(check_output("ls -l /var/run/netns", shell=True))
+    _log.debug(check_output("ls -l /proc/$$/ns", shell=True))
+    _log.debug(check_output("ls -l /proc/%s/ns" % cpid, shell=True))
 
     # Create the veth pair and move one end into container:
     check_call("ip link add %s type veth peer name %s" % (iface, iface_tmp), shell=True)
