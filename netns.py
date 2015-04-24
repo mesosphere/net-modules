@@ -60,15 +60,20 @@ def setup_logging(logfile):
     _log.addHandler(handler)
 
 
-def remove_endpoint(ep_id):
+def remove_endpoint(ep_id, cpid):
     """
     Remove an endpoint.
 
     :param ep_id: The endpoint ID to remove
+    :param cpid: The PID of the container namespace.
     :return: Nothing
     """
     iface = IF_PREFIX + ep_id[:11]
-    call("ip link delete %s" % iface, shell=True)
+    _ = call("ip link delete %s" % iface, shell=True)
+
+    # Clean up namespace symlink.  The prevents nonexistant namespaces from
+    # showing up in `ip netns` calls.
+    check_call("rm /var/run/netns/%s" % cpid)
 
 
 def set_up_endpoint(ip, cpid, next_hop_ips,
