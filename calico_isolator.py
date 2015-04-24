@@ -61,7 +61,7 @@ def isolate(cpid, cont_id):
     hostname = socket.gethostname()
     next_hop_ips = datastore.get_default_next_hops(hostname)
 
-    endpoint = netns.set_up_endpoint(ip, cpid,
+    endpoint = netns.set_up_endpoint(ip, cpid, cont_id,
                                      next_hop_ips=next_hop_ips,
                                      in_container=False,
                                      veth_name="eth0",
@@ -79,7 +79,7 @@ def isolate(cpid, cont_id):
     _log.info("Finished network for container %s, IP=%s", cont_id, ip)
 
 
-def cleanup(cpid, cont_id):
+def cleanup(cont_id):
     _log.info("Cleaning executor with Container ID %s.", cont_id)
 
     hostname = socket.gethostname()
@@ -101,7 +101,7 @@ def cleanup(cpid, cont_id):
 
     # Remove the endpoint
     _log.info("Removing veth for endpoint %s", ep_id)
-    netns.remove_endpoint(ep_id, cpid)
+    netns.remove_endpoint(ep_id, cont_id)
 
     # Remove the container from the datastore.
     datastore.remove_container(hostname, cont_id)
@@ -115,6 +115,6 @@ if __name__ == "__main__":
     elif cmd == "isolate":
         isolate(sys.argv[2], sys.argv[3])
     elif cmd == "cleanup":
-        cleanup(sys.argv[2], sys.argv[3])
+        cleanup(sys.argv[2])
     else:
         assert False, "Invalid command."

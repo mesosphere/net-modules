@@ -60,12 +60,12 @@ def setup_logging(logfile):
     _log.addHandler(handler)
 
 
-def remove_endpoint(ep_id, cpid):
+def remove_endpoint(ep_id, ns_id):
     """
     Remove an endpoint.
 
     :param ep_id: The endpoint ID to remove
-    :param cpid: The PID of the container namespace.
+    :param ns_id: The ID of the container namespace.
     :return: Nothing
     """
     iface = IF_PREFIX + ep_id[:11]
@@ -73,10 +73,11 @@ def remove_endpoint(ep_id, cpid):
 
     # Clean up namespace symlink.  The prevents nonexistant namespaces from
     # showing up in `ip netns` calls.
-    check_call("rm /var/run/netns/%s" % cpid)
+    check_call("rm /var/run/netns/%s" % ns_id)
 
 
-def set_up_endpoint(ip, cpid, next_hop_ips,
+def set_up_endpoint(ip, cpid, ns_id,
+                    next_hop_ips,
                     in_container=False,
                     veth_name=VETH_NAME,
                     proc_alias=PROC_ALIAS):
@@ -86,6 +87,7 @@ def set_up_endpoint(ip, cpid, next_hop_ips,
     :param ip: The IP address to assign to the endpoint (veth) as Netaddr
     IPAddress.
     :param cpid: The PID of a process currently running in the namespace.
+    :param ns_id: The ID to use for the netns.
     :param next_hop_ips: Dict of {version: IPAddress} for the next hops of the
     default routes.
     :param in_container: When True, we assume this program is itself running in
@@ -108,7 +110,8 @@ def set_up_endpoint(ip, cpid, next_hop_ips,
 
     # Provision the networking
     check_call("mkdir -p /var/run/netns", shell=True)
-    check_call("ln -s /%s/%s/ns/net /var/run/netns/%s" % (proc_alias, cpid, cpid), shell=True)
+    check_call("ln -s /%s/%s/ns/net /var/run/netns/%s" %
+               (proc_alias, cpid, ns_id), shell=True)
 
     # If running in a container, set up a link to the root netns.
     if in_container:
@@ -120,21 +123,21 @@ def set_up_endpoint(ip, cpid, next_hop_ips,
         except CalledProcessError:
             pass  # Only need to do this once.
     _log.debug(check_output("ls -l /var/run/netns", shell=True))
-    _log.debug(check_output("ls -l /proc/$$/ns", shell=True))
-    _log.debug(check_output("ls -l /proc/%s/ns" % cpid, shell=True))
 
     # Create the veth pair and move one end into container:
-    check_call("ip link add %s type veth peer name %s" % (iface, iface_tmp), shell=True)
+    check_call("ip link add %s type veth peer name %s" % (iface, iface_tmp),
+               shell=True)
     check_call("ip link set %s up" % iface, shell=True)
-    check_call("ip link set %s netns %s" % (iface_tmp, cpid), shell=True)
-    _log.debug(check_output("ip netns exec %s ip link" % cpid, shell=True))
+    check_call("ip link set %s netns %s" % (iface_tmp, ns_id), shell=True)
+    _log.debug(check_output("ip netns exec %s ip link" % ns_id, shell=True))
 
     # Rename within the container to something sensible.
-    check_call("ip netns exec %s ip link set dev %s name %s" % (cpid,
+    check_call("ip netns exec %s ip link set dev %s name %s" % (ns_id,
                                                                 iface_tmp,
                                                                 veth_name),
                shell=True)
-    check_call("ip netns exec %s ip link set %s up" % (cpid, veth_name), shell=True)
+    check_call("ip netns exec %s ip link set %s up" % (ns_id, veth_name),
+               shell=True)
 
     # If in container, the iface end of the veth pair will be in the container
     # namespace.  We need to move it to the root namespace so it will
@@ -142,12 +145,13 @@ def set_up_endpoint(ip, cpid, next_hop_ips,
     if in_container:
         # Move the other end of the veth pair into the root namespace
         check_call("ip link set %s netns %s" % (iface, ROOT_NETNS), shell=True)
-        check_call("ip netns exec %s ip link set %s up" % (ROOT_NETNS, iface), shell=True)
+        check_call("ip netns exec %s ip link set %s up" % (ROOT_NETNS, iface),
+                   shell=True)
 
     # Add an IP address.
-    check_call("ip netns exec %(cpid)s ip -%(version)s addr add "
+    check_call("ip netns exec %(ns_id)s ip -%(version)s addr add "
                "%(addr)s/%(len)s dev %(device)s" %
-               {"cpid": cpid,
+               {"ns_id": ns_id,
                 "version": ip.version,
                 "len": PREFIX_LEN[ip.version],
                 "addr": ip,
@@ -156,24 +160,25 @@ def set_up_endpoint(ip, cpid, next_hop_ips,
 
     # Connected route to next hop & default route.
     next_hop = next_hop_ips[ip.version]
-    check_call("ip netns exec %(cpid)s ip -%(version)s route replace"
+    check_call("ip netns exec %(ns_id)s ip -%(version)s route replace"
                " %(next_hop)s dev %(device)s" %
-               {"cpid": cpid,
+               {"ns_id": ns_id,
                 "version": ip.version,
                 "device": veth_name,
                 "next_hop": next_hop},
                shell=True)
-    check_call("ip netns exec %(cpid)s ip -%(version)s route replace"
+    check_call("ip netns exec %(ns_id)s ip -%(version)s route replace"
                " default via %(next_hop)s dev %(device)s" %
-               {"cpid": cpid,
+               {"ns_id": ns_id,
                 "version": ip.version,
                 "device": veth_name,
                 "next_hop": next_hop},
                shell=True)
 
     # Get the MAC address.
-    mac = check_output("ip netns exec %s ip link show %s | grep ether | awk '{print $2}'" %
-                       (cpid, veth_name), shell=True).strip()
+    mac = check_output(
+        "ip netns exec %s ip link show %s | grep ether | awk '{print $2}'" %
+        (ns_id, veth_name), shell=True).strip()
 
     # Return an Endpoint
     network = IPNetwork(IPAddress(ip))

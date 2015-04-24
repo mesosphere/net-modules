@@ -118,12 +118,11 @@ public:
   {
     foreach (const Parameter& parameter, parameters.parameter()) {
       if (parameter.key() == cleanupKey) {
-        std::vector<std::string> argv(5);
+        std::vector<std::string> argv(4);
         argv[0] = "python";
         argv[1] = parameter.value();
         argv[2] = "cleanup";
-        argv[3] = stringify(pid);
-        argv[4] = containerId.value();
+        argv[3] = containerId.value();
         Try<process::Subprocess> child = process::subprocess(pythonPath, argv);
         CHECK_SOME(child);
         waitpid(child.get().pid(), NULL, 0);
