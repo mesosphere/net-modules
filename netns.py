@@ -73,7 +73,7 @@ def remove_endpoint(ep_id, ns_id):
 
     # Clean up namespace symlink.  The prevents nonexistant namespaces from
     # showing up in `ip netns` calls.
-    check_call("rm /var/run/netns/%s" % ns_id)
+    check_call("rm /var/run/netns/%s" % ns_id, shell=True)
 
 
 def set_up_endpoint(ip, cpid, ns_id,
