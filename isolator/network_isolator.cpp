@@ -63,7 +63,7 @@ public:
       const Option<std::string>& user)
   {
     LOG(INFO) << "MetaswitchNetworkIsolator::prepare";
-    foreach (const EnvironmentVariable& var,
+    foreach (const Environment_Variable& var,
              executorInfo.command().environment().variables()) {
       LOG(INFO) << "ENV: " << var.name() << "=" << var.value();
     }
