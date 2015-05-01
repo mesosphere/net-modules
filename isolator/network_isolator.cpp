@@ -29,6 +29,8 @@
 
 #include <stout/try.hpp>
 #include <stout/stringify.hpp>
+#include <stout/hashmap.hpp>
+#include <stout/option.hpp>
 
 using namespace mesos;
 
@@ -63,10 +65,19 @@ public:
       const Option<std::string>& user)
   {
     LOG(INFO) << "MetaswitchNetworkIsolator::prepare";
+    Option<std:string> ipAddress = Option::none()
+    Option<std:string> profile = Option::none()
     foreach (const Environment_Variable& var,
              executorInfo.command().environment().variables()) {
       LOG(INFO) << "ENV: " << var.name() << "=" << var.value();
+      if (var.name() == "CALICO_IP") {
+        ipAddress = new Option(var.value())
+      }
+      else if (var.name() == "CALICO_PROFILE") {
+        profile = new Option(var.value())
+      }
     }
+    infos[containerId] = new Info(ipAddress, profile);
     foreach (const Parameter& parameter, parameters.parameter()) {
       if (parameter.key() == initializationKey) {
         CommandInfo commandInfo;
@@ -81,14 +92,18 @@ public:
       const ContainerID& containerId,
       pid_t pid)
   {
+
+    const Info* info = infos[containerId];
     foreach (const Parameter& parameter, parameters.parameter()) {
       if (parameter.key() == isolateKey) {
-        std::vector<std::string> argv(5);
+        std::vector<std::string> argv(7);
         argv[0] = "python";
         argv[1] = parameter.value();
         argv[2] = "isolate";
         argv[3] = stringify(pid);
         argv[4] = containerId.value();
+        argv[5] = stringify(info.ipAddress.get());
+        argv[6] = stringify(info.profile.get());
         Try<process::Subprocess> child = process::subprocess(pythonPath, argv);
         CHECK_SOME(child);
         waitpid(child.get().pid(), NULL, 0);
@@ -137,10 +152,26 @@ public:
   }
 
 private:
+  struct Info
+  {
+    Info(const Option<std::string>& _ipAddress,
+         const Option<std::string>& _profile)
+      : ipAddress(_ipAddress),
+        profile(_profile) {}
+
+    // The IP address to assign to the container, or NONE for auto-assignment.
+    const Option<std::string> ipAddress;
+
+    // The network profile name to assign to the container, or NONE for the
+    // default.
+    const Option<std::string> profile;
+  };
+
   MetaswitchNetworkIsolatorProcess(const Parameters& parameters_)
     : parameters(parameters_) {}
 
   const Parameters parameters;
+  hashmap<ContainerID, Info*> infos;
 };
 
 

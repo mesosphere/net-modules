@@ -54,8 +54,10 @@ def initialize():
     print "Empty initialize()."
 
 
-def isolate(cpid, cont_id):
-    _log.info("Isolating executor with Container ID %s, PID %s.", cont_id, cpid)
+def isolate(cpid, cont_id, ip, profile):
+    _log.info("Isolating executor with Container ID %s, PID %s.",
+              cont_id, cpid)
+    _log.info("IP: %s, Profile %s", ip, profile)
 
     ip = assign_ipv4()
     hostname = socket.gethostname()
@@ -113,7 +115,7 @@ if __name__ == "__main__":
     if cmd == "initialize":
         initialize()
     elif cmd == "isolate":
-        isolate(sys.argv[2], sys.argv[3])
+        isolate(sys.argv[2], sys.argv[3], sys.argv[4], sys.argv[5])
     elif cmd == "cleanup":
         cleanup(sys.argv[2])
     else:
