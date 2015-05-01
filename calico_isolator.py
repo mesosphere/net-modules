@@ -94,7 +94,7 @@ def isolate(cpid, cont_id, ip_str, profile):
                                      veth_name="eth0",
                                      proc_alias="proc")
 
-    if profile.to_lower() == "none":
+    if profile.lower() == "none":
         profile = "mesos"
     if not datastore.profile_exists(profile):
         _log.info("Autocreating profile %s", profile)
