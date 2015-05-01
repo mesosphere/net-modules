@@ -65,16 +65,16 @@ public:
       const Option<std::string>& user)
   {
     LOG(INFO) << "MetaswitchNetworkIsolator::prepare";
-    Option<std:string> ipAddress = Option::none()
-    Option<std:string> profile = Option::none()
+    std:string ipAddress = "auto";
+    std:string profile = "none";
     foreach (const Environment_Variable& var,
              executorInfo.command().environment().variables()) {
       LOG(INFO) << "ENV: " << var.name() << "=" << var.value();
       if (var.name() == "CALICO_IP") {
-        ipAddress = new Option(var.value())
+        ipAddress = var.value();
       }
       else if (var.name() == "CALICO_PROFILE") {
-        profile = new Option(var.value())
+        profile = var.value();
       }
     }
     infos[containerId] = new Info(ipAddress, profile);
@@ -102,8 +102,8 @@ public:
         argv[2] = "isolate";
         argv[3] = stringify(pid);
         argv[4] = containerId.value();
-        argv[5] = stringify(info.ipAddress.get());
-        argv[6] = stringify(info.profile.get());
+        argv[5] = stringify(info->ipAddress.get());
+        argv[6] = stringify(info->profile.get());
         Try<process::Subprocess> child = process::subprocess(pythonPath, argv);
         CHECK_SOME(child);
         waitpid(child.get().pid(), NULL, 0);
