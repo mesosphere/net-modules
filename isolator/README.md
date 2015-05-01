@@ -4,7 +4,7 @@ This module allows one to execute a given command in the network namespace
 before and after launching tasks/executors.
 
 ##Build
-See [Building the Modules](https://github.com/mesosphere/mesos-modules-private).
+See [Building the Modules](https://github.com/mesosphere/metaswitch-modules).
 
 ##Setup
 
@@ -58,6 +58,7 @@ to specify two flags -- `modules` and `isolation`. Here is an example:
 
 
 ```
-./bin/mesos-slave.sh --master=master_ip:port --modules=file://path/to/slave_gssapi.json \
+./bin/mesos-slave.sh --master=master_ip:port --namespaces='network' \
+    --modules=file://path/to/slave_gssapi.json \
     --isolation="com_mesosphere_mesos_MetaswitchNetworkIsolator"
 ```

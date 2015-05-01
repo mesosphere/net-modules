@@ -18,7 +18,7 @@ For more details, please see
 ## Prerequisites
 
 Building Mesos modules requires system-wide installation of google-protobug,
-glog, and boost.
+glog, boost, and picojson.
 
 ## Build Mesos with some unbundled dependencies
 
@@ -54,7 +54,7 @@ Note that the `--prefix=$HOME/usr` is required only if you don't want to do a sy
 
 ## Build Mesos Modules
 
-Once that is done, extract/clone the mesos-modules package. For the sake of this
+Once Mesos is built and installed, extract/clone the mesos-modules package. For the sake of this
 example, that could be in `~/mesos-modules`. Note that you should not put
 `mesos-modules` into the `mesos` folder.
 
