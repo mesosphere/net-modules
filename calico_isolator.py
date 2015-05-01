@@ -3,7 +3,7 @@ __author__ = 'sjc'
 import sys
 import netns
 from ipam import SequentialAssignment, IPAMClient
-from netaddr import IPAddress, IPNetwork
+from netaddr import IPAddress, IPNetwork, AddrFormatError
 import socket
 import logging
 import logging.handlers
@@ -54,12 +54,37 @@ def initialize():
     print "Empty initialize()."
 
 
-def isolate(cpid, cont_id, ip, profile):
+def isolate(cpid, cont_id, ip_str, profile):
     _log.info("Isolating executor with Container ID %s, PID %s.",
               cont_id, cpid)
-    _log.info("IP: %s, Profile %s", ip, profile)
+    _log.info("IP: %s, Profile %s", ip_str, profile)
 
-    ip = assign_ipv4()
+    # Just auto assign ipv4 addresses for now.
+    if ip_str.lower() == "auto":
+        ip = assign_ipv4()
+    else:
+        try:
+            ip = IPAddress(ip_str)
+        except AddrFormatError:
+            _log.warning("IP address %s could not be parsed" % ip_str)
+            return
+        else:
+            version = "v%s" % ip.version
+            _log.debug('Attempting to assign IP%s address %s', version, ip)
+            pools = datastore.get_ip_pools(version)
+            pool = None
+            for candidate_pool in pools:
+                if ip in candidate_pool:
+                    pool = candidate_pool
+                    _log.debug('Using IP pool %s', pool)
+                    break
+            if not pool:
+                _log.warning("Requested IP %s isn't in any configured "
+                             "pool. Container %s", ip, cont_id)
+                return
+            if not datastore.assign_address(pool, ip):
+                _log.warning("IP address couldn't be assigned for "
+                             "container %s, IP=%s", cont_id, ip)
     hostname = socket.gethostname()
     next_hop_ips = datastore.get_default_next_hops(hostname)
 
@@ -68,7 +93,9 @@ def isolate(cpid, cont_id, ip, profile):
                                      in_container=False,
                                      veth_name="eth0",
                                      proc_alias="proc")
-    profile = "mesos"
+
+    if profile.to_lower() == "none":
+        profile = "mesos"
     if not datastore.profile_exists(profile):
         _log.info("Autocreating profile %s", profile)
         datastore.create_profile(profile)

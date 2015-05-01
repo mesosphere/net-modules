@@ -92,7 +92,6 @@ public:
       const ContainerID& containerId,
       pid_t pid)
   {
-
     const Info* info = infos[containerId];
     foreach (const Parameter& parameter, parameters.parameter()) {
       if (parameter.key() == isolateKey) {
@@ -135,6 +134,11 @@ public:
   virtual process::Future<Nothing> cleanup(
       const ContainerID& containerId)
   {
+    if (!infos.contains(containerId)) {
+      LOG(WARNING) << "Ignoring cleanup for unknown container " << containerId;
+      return Nothing();
+    }
+    infos.erase(containerId);
     foreach (const Parameter& parameter, parameters.parameter()) {
       if (parameter.key() == cleanupKey) {
         std::vector<std::string> argv(4);
