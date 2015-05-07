@@ -1,4 +1,4 @@
-AC_INIT([MesosModules],[0.1])
+AC_INIT([metaswitch-modules],[0.1])
 AC_PREREQ([2.69])
 AC_CONFIG_FILES([Makefile])
 AC_LANG([C++])
