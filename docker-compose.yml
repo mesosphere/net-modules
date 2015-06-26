@@ -1,0 +1,19 @@
+master:
+  image: mesosphere/mesos-modules-dev:latest
+  net: host
+  command: /mesos/build/bin/mesos-master.sh --ip=127.0.0.1 --work_dir=/tmp/mesos
+
+slave:
+  build: .
+  privileged: true
+  net: host
+
+marathon:
+  image: mesosphere/marathon
+  net: host
+  command:
+    - "./bin/start"
+    - "--master"
+    - "local"
+    - "--zk"
+    - "zk://localhost:2181/marathon"
