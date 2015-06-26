@@ -1,6 +1,8 @@
 __author__ = 'sjc'
 
 import sys
+import os
+import errno
 import netns
 from ipam import SequentialAssignment, IPAMClient
 from netaddr import IPAddress, IPNetwork, AddrFormatError
@@ -15,6 +17,13 @@ LOGFILE = "/var/log/calico/isolator.log"
 datastore = IPAMClient()
 
 def setup_logging(logfile):
+    # Ensure directory exists.
+    try:
+        os.makedirs(os.path.dirname(LOGFILE))
+    except OSError as oserr:
+        if oserr.errno != errno.EEXIST:
+            raise
+
     _log.setLevel(logging.DEBUG)
     formatter = logging.Formatter(
                 '%(asctime)s [%(levelname)s] %(name)s %(lineno)d: %(message)s')
@@ -29,7 +38,7 @@ def setup_logging(logfile):
     handler.setFormatter(formatter)
     _log.addHandler(handler)
 
-    netns.setup_logging(LOGFILE)
+    netns.setup_logging(logfile)
 
 
 def assign_ipv4():

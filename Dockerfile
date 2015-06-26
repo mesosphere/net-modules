@@ -15,4 +15,8 @@ RUN ./bootstrap && \
     ../configure --with-mesos-build-dir=/mesos/build --with-mesos-root=/mesos && \
     make all
 
+# Add python module requirements
+RUN apt-get install -y python-pip libffi-dev
+RUN pip install -r requirements.txt
+
 CMD ["/isolator/wrapslave"]

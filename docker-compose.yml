@@ -1,7 +1,7 @@
 master:
   image: mesosphere/mesos-modules-dev:latest
   net: host
-  command: /mesos/build/bin/mesos-master.sh --ip=127.0.0.1 --work_dir=/tmp/mesos
+  command: /mesos/build/bin/mesos-master.sh --ip=127.0.0.1 --work_dir=/tmp/mesos --zk=zk://localhost:2181/mesos --quorum=1
 
 slave:
   build: .
@@ -12,8 +12,11 @@ marathon:
   image: mesosphere/marathon
   net: host
   command:
-    - "./bin/start"
     - "--master"
-    - "local"
+    - "zk://localhost:2181/mesos"
     - "--zk"
     - "zk://localhost:2181/marathon"
+
+etcd:
+  image: quay.io/coreos/etcd
+  net: host
