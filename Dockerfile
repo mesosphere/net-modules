@@ -14,3 +14,5 @@ RUN ./bootstrap && \
     export LD_LIBRARY_PATH=LD_LIBRARY_PATH:/usr/local/lib && \
     ../configure --with-mesos-build-dir=/mesos/build --with-mesos-root=/mesos && \
     make all
+
+CMD ["/isolator/wrapslave"]
