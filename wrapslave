@@ -84,6 +84,4 @@ done
 popd >/dev/null
 
 
-/mesos/build/bin/mesos-slave.sh --master=127.0.0.1:5050 \
-                                --modules=file:///isolator/build/isolator/modules.json \
-                                --isolation="com_mesosphere_mesos_MetaswitchNetworkIsolator"
+/mesos/build/bin/mesos-slave.sh
