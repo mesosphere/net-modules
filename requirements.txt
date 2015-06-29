@@ -1,2 +1,1 @@
 netaddr
-python-etcd==0.3.2

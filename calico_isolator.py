@@ -3,8 +3,8 @@ __author__ = 'sjc'
 import sys
 import os
 import errno
-import netns
-from ipam import SequentialAssignment, IPAMClient
+from pycalico import netns
+from pycalico.ipam import SequentialAssignment, IPAMClient
 from netaddr import IPAddress, IPNetwork, AddrFormatError
 import socket
 import logging
