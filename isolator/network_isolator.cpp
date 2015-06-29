@@ -66,16 +66,16 @@ const char* cleanupKey = "cleanup_command";
 const char* isolateKey = "isolate_command";
 const char* pythonPath = "/usr/bin/python";
 
-class MetaswitchNetworkIsolatorProcess : public mesos::slave::IsolatorProcess
+class CalicoIsolatorProcess : public mesos::slave::IsolatorProcess
 {
 public:
   static Try<mesos::slave::Isolator*> create(const Parameters& parameters)
   {
     return new Isolator(process::Owned<IsolatorProcess>(
-        new MetaswitchNetworkIsolatorProcess(parameters)));
+        new CalicoIsolatorProcess(parameters)));
   }
 
-  virtual ~MetaswitchNetworkIsolatorProcess() {}
+  virtual ~CalicoIsolatorProcess() {}
 
   virtual process::Future<Option<int>> namespaces()
   {
@@ -96,7 +96,7 @@ public:
       const Option<std::string>& rootfs,
       const Option<std::string>& user)
   {
-    LOG(INFO) << "MetaswitchNetworkIsolator::prepare";
+    LOG(INFO) << "CalicoIsolator::prepare";
     std::string ipAddress = "auto";
     std::string profile = "none";
     foreach (const Environment_Variable& var,
@@ -203,7 +203,7 @@ private:
     const Option<std::string> profile;
   };
 
-  MetaswitchNetworkIsolatorProcess(const Parameters& parameters_)
+  CalicoIsolatorProcess(const Parameters& parameters_)
     : parameters(parameters_) {}
 
   const Parameters parameters;
@@ -211,10 +211,10 @@ private:
 };
 
 
-static Isolator* createMetaswitchNetworkIsolator(const Parameters& parameters)
+static Isolator* createCalicoIsolator(const Parameters& parameters)
 {
-  LOG(INFO) << "Loading Metaswitch Network Isolator module";
-  Try<Isolator*> result = MetaswitchNetworkIsolatorProcess::create(parameters);
+  LOG(INFO) << "Loading Calico Isolator module";
+  Try<Isolator*> result = CalicoIsolatorProcess::create(parameters);
   if (result.isError()) {
     return NULL;
   }
@@ -222,13 +222,13 @@ static Isolator* createMetaswitchNetworkIsolator(const Parameters& parameters)
 }
 
 
-// Declares the Metaswitch network isolator named
-// 'org_apache_mesos_MetaswitchNetworkIsolator'.
-mesos::modules::Module<Isolator> com_mesosphere_mesos_MetaswitchNetworkIsolator(
+// Declares the Calico isolator named
+// 'org_apache_mesos_CalicoIsolator'.
+mesos::modules::Module<Isolator> com_mesosphere_mesos_CalicoIsolator(
     MESOS_MODULE_API_VERSION,
     MESOS_VERSION,
     "Mesosphere",
     "support@mesosphere.com",
-    "Metaswitch Network Isolator module.",
+    "Calico Isolator module.",
     NULL,
-    createMetaswitchNetworkIsolator);
+    createCalicoIsolator);

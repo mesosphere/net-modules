@@ -43,7 +43,7 @@ Name:           metaswitch-modules
 Version:        0.1
 Release:        0%{?dist}
 License:        Mesosphere
-Summary:        Network isolator module for Metaswitch
+Summary:        Network isolator module for Calico
 Url:            https://github.com/mesosphere/metaswitch-modules
 Source0:        metaswitch-modules-0.1.tar.gz
 
