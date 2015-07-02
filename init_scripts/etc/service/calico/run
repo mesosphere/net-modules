@@ -1,0 +1,4 @@
+#!/bin/sh
+IP=`ip addr | grep 'global eth0' | awk '{print $2}' | cut -f1  -d'/'`
+exec 2>&1
+exec calicoctl node --ip=$IP

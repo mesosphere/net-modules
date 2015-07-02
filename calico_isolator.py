@@ -5,6 +5,7 @@ import os
 import errno
 from pycalico import netns
 from pycalico.ipam import SequentialAssignment, IPAMClient
+from pycalico.datastore import Rules, Rule
 from netaddr import IPAddress, IPNetwork, AddrFormatError
 import socket
 import logging
@@ -13,6 +14,7 @@ import logging.handlers
 _log = logging.getLogger(__name__)
 
 LOGFILE = "/var/log/calico/isolator.log"
+ORCHESTRATOR_ID = "mesos"
 
 datastore = IPAMClient()
 
@@ -97,23 +99,31 @@ def isolate(cpid, cont_id, ip_str, profile):
     hostname = socket.gethostname()
     next_hop_ips = datastore.get_default_next_hops(hostname)
 
-    endpoint = netns.set_up_endpoint(ip, cpid, cont_id,
+    endpoint = netns.set_up_endpoint(ip=ip,
+                                     hostname=hostname,
+                                     orchestrator_id=ORCHESTRATOR_ID,
+                                     workload_id=cont_id,
+                                     cpid=cpid,
                                      next_hop_ips=next_hop_ips,
-                                     in_container=False,
                                      veth_name="eth0",
-                                     proc_alias="proc")
+                                     proc_alias="/proc")
 
     if profile.lower() == "none":
         profile = "mesos"
     if not datastore.profile_exists(profile):
         _log.info("Autocreating profile %s", profile)
         datastore.create_profile(profile)
+        prof = datastore.get_profile(profile)
+        prof.rules = Rules(id=profile,
+                           inbound_rules=[Rule(action="allow")],
+                           outbound_rules=[Rule(action="allow")])
+        datastore.profile_update_rules(prof)
     _log.info("Adding container %s to profile %s", cont_id, profile)
-    endpoint.profile_id = profile
+    endpoint.profile_ids = [profile]
     _log.info("Finished adding container %s to profile %s",
               cont_id, profile)
 
-    datastore.set_endpoint(hostname, cont_id, endpoint)
+    datastore.set_endpoint(endpoint)
     _log.info("Finished network for container %s, IP=%s", cont_id, ip)
 
 
@@ -121,8 +131,9 @@ def cleanup(cont_id):
     _log.info("Cleaning executor with Container ID %s.", cont_id)
 
     hostname = socket.gethostname()
-    ep_id = datastore.get_ep_id_from_cont(hostname, cont_id)
-    endpoint = datastore.get_endpoint(hostname, cont_id, ep_id)
+    endpoint = datastore.get_endpoint(hostname=hostname,
+                                      orchestrator_id=ORCHESTRATOR_ID,
+                                      workload_id=cont_id)
 
     # Unassign any address it has.
     for net in endpoint.ipv4_nets | endpoint.ipv6_nets:
@@ -138,11 +149,13 @@ def cleanup(cont_id):
                 datastore.unassign_address(pool, ip)
 
     # Remove the endpoint
-    _log.info("Removing veth for endpoint %s", ep_id)
-    netns.remove_endpoint(ep_id, cont_id)
+    _log.info("Removing veth for endpoint %s", endpoint.endpoint_id)
+    netns.remove_endpoint(endpoint.endpoint_id)
 
     # Remove the container from the datastore.
-    datastore.remove_container(hostname, cont_id)
+    datastore.remove_container(hostname=hostname,
+                               orchestrator_id=ORCHESTRATOR_ID,
+                               container_id=cont_id)
     _log.info("Cleanup complete for container %s", cont_id)
 
 if __name__ == "__main__":
