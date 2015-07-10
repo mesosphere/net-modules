@@ -153,9 +153,9 @@ def cleanup(cont_id):
     netns.remove_endpoint(endpoint.endpoint_id)
 
     # Remove the container from the datastore.
-    datastore.remove_container(hostname=hostname,
-                               orchestrator_id=ORCHESTRATOR_ID,
-                               container_id=cont_id)
+    datastore.remove_workload(hostname=hostname,
+                              orchestrator_id=ORCHESTRATOR_ID,
+                              workload_id=cont_id)
     _log.info("Cleanup complete for container %s", cont_id)
 
 if __name__ == "__main__":
