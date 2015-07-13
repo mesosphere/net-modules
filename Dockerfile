@@ -120,7 +120,7 @@ VOLUME /var/lib/docker
 ###################
 # Calico
 ###################
-RUN wget https://github.com/Metaswitch/calico-docker/releases/download/v0.4.8/calicoctl && \
+RUN wget https://circle-artifacts.com/gh/Metaswitch/calico-docker/1231/artifacts/0/home/ubuntu/calico-docker/dist/calicoctl && \
     chmod +x calicoctl && \
     mv calicoctl /usr/local/bin/
 
@@ -129,3 +129,4 @@ RUN wget https://github.com/Metaswitch/calico-docker/releases/download/v0.4.8/ca
 #################
 ADD ./init_scripts/etc/service/mesos_slave/run /etc/service/mesos_slave/run
 ADD ./init_scripts/etc/service/docker/run /etc/service/docker/run
+ADD ./init_scripts/etc/service/calico/run /etc/service/calico/run
