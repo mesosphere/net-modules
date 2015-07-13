@@ -78,7 +78,7 @@ def isolate(cpid, cont_id, ip_str, profile):
             ip = IPAddress(ip_str)
         except AddrFormatError:
             _log.warning("IP address %s could not be parsed" % ip_str)
-            return
+            sys.exit(1)
         else:
             version = "v%s" % ip.version
             _log.debug('Attempting to assign IP%s address %s', version, ip)
@@ -92,7 +92,7 @@ def isolate(cpid, cont_id, ip_str, profile):
             if not pool:
                 _log.warning("Requested IP %s isn't in any configured "
                              "pool. Container %s", ip, cont_id)
-                return
+                sys.exit(1)
             if not datastore.assign_address(pool, ip):
                 _log.warning("IP address couldn't be assigned for "
                              "container %s, IP=%s", cont_id, ip)
