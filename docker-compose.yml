@@ -33,6 +33,7 @@ slave1:
   links:
     - mesosmaster
     - zookeeper
+    - etcd
   volumes:
     - /var/log/mesos:/var/log/mesos
   environment:
@@ -44,6 +45,7 @@ slave1:
     - MESOS_RESOURCES=ports(*):[31000-31100]
     - MESOS_MODULES=file:///isolator/build/isolator/modules.json
     - MESOS_ISOLATION=com_mesosphere_mesos_CalicoIsolator
+    - ETCD_AUTHORITY=etcd:4001
 
 marathon:
   image: mesosphere/marathon:v0.8.1
@@ -55,3 +57,6 @@ marathon:
   links:
     - mesosmaster
     - zookeeper
+
+etcd:
+  image: spikecurtis/single-etcd

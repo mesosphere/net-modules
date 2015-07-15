@@ -83,5 +83,5 @@ do
 done
 popd >/dev/null
 
-
-/mesos/build/bin/mesos-slave.sh
+IP=`ip addr | grep 'global eth0' | awk '{print $2}' | cut -f1  -d'/'`
+/mesos/build/bin/mesos-slave.sh --ip=$IP
