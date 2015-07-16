@@ -120,7 +120,7 @@ VOLUME /var/lib/docker
 ###################
 # Calico
 ###################
-RUN wget https://circle-artifacts.com/gh/Metaswitch/calico-docker/1261/artifacts/0/home/ubuntu/calico-docker/dist/calicoctl && \
+RUN wget https://github.com/Metaswitch/calico-docker/releases/download/v0.5.1/calicoctl && \
     chmod +x calicoctl && \
     mv calicoctl /usr/local/bin/
 
