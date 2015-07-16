@@ -45,6 +45,7 @@ slave1:
     - MESOS_RESOURCES=ports(*):[31000-31100]
     - MESOS_MODULES=file:///isolator/build/isolator/modules.json
     - MESOS_ISOLATION=com_mesosphere_mesos_CalicoIsolator
+    - MESOS_HOOKS=com_mesosphere_mesos_CalicoHook
     - ETCD_AUTHORITY=etcd:4001
 
 marathon:

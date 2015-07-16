@@ -19,6 +19,15 @@
               "value": "@abs_top_srcdir@/calico_isolator.py"
             }
           ]
+        },
+        {
+          "name": "com_mesosphere_mesos_CalicoHook",
+          "parameters": [
+            {
+              "key": "ipam_command",
+              "value": "@abs_top_srcdir@/calico_isolator.py"
+            }
+          ]
         }
       ]
     }

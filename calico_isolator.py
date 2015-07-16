@@ -167,5 +167,7 @@ if __name__ == "__main__":
         isolate(sys.argv[2], sys.argv[3], sys.argv[4], sys.argv[5])
     elif cmd == "cleanup":
         cleanup(sys.argv[2])
+    elif cmd == "assign_ipv4":
+        sys.stdout.write(str(assign_ipv4()))
     else:
         assert False, "Invalid command."

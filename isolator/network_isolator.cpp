@@ -53,6 +53,7 @@
 #include <process/future.hpp>
 #include <process/owned.hpp>
 #include <process/subprocess.hpp>
+#include <process/io.hpp>
 
 #include <stout/try.hpp>
 #include <stout/stringify.hpp>
@@ -81,6 +82,7 @@ struct Info
 const char* initializationKey = "initialization_command";
 const char* cleanupKey = "cleanup_command";
 const char* isolateKey = "isolate_command";
+const char* ipamKey = "ipam_command";
 const char* pythonPath = "/usr/bin/python";
 
 hashmap<ContainerID, Info*> *infos = NULL;
@@ -274,9 +276,21 @@ public:
       }
     }
 
-    std::string libprocessIP = "0.0.0.0";
     if (ipAddress == "auto") {
-     // TODO(kapil): Contact Calico IPAM to calculate libprocessIP.
+      std::vector<std::string> argv(3);
+      argv[0] = "python";
+      argv[1] = ipamPath;
+      argv[2] = "assign_ipv4";
+      Try<process::Subprocess> child = process::subprocess(
+                                                 pythonPath,
+                                                 argv,
+                                                 process::Subprocess::PIPE(),
+                                                 process::Subprocess::PIPE(),
+                                                 process::Subprocess::PIPE());
+      CHECK_SOME(child);
+      waitpid(child.get().pid(), NULL, 0);
+      ipAddress = process::io::read(child.get().out().get()).get();
+      LOG(INFO) << "Got IP " << ipAddress << " from IPAM.";
     }
 
     foreach (const Environment_Variable& var,
@@ -288,9 +302,8 @@ public:
 
     Environment::Variable* variable = environment.add_variables();
     variable->set_name("LIBPROCESS_IP");
-    variable->set_value(libprocessIP);
-
-    // TODO(kapil): Update CALICO_IP with the correct IP (if needed).
+    variable->set_value(ipAddress);
+    LOG(INFO) << "LIBPROCESS_IP=" << ipAddress;
 
     if (!executors->contains(executorInfo.executor_id())) {
       LOG(WARNING) << "Unknown executor " << executorInfo.executor_id();
@@ -301,12 +314,25 @@ public:
 
     return environment;
   }
+
+  CalicoHook(const std::string ipamPath_)
+    : ipamPath(ipamPath_) {}
+
+private:
+  const std::string ipamPath;
 };
 
 
 static Hook* createCalicoHook(const Parameters& parameters)
 {
-  return new CalicoHook();
+  std::string ipamPath = "";
+  foreach (const Parameter& parameter, parameters.parameter()) {
+    if (parameter.key() == ipamKey) {
+      ipamPath = parameter.value();
+    }
+  }
+  LOG(INFO) << "IPAM script: " << ipamPath;
+  return new CalicoHook(ipamPath);
 }
 
 
