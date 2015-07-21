@@ -114,9 +114,19 @@ def isolate(cpid, cont_id, ip_str, profile):
         _log.info("Autocreating profile %s", profile)
         datastore.create_profile(profile)
         prof = datastore.get_profile(profile)
+
+        # Set up the profile rules to allow incoming connections from the host
+        # since the slave process will be running there.
+        # Also allow connections from others in the profile.
+        # Deny other connections (default, so not explicitly needed).
+        (ipv4, _) = datastore.get_host_ips(hostname)
+        host_net = ipv4 + "/32"
+        allow_slave = Rule(action="allow", src_net=host_net)
+        allow_self = Rule(action="allow", src_tag=profile)
+        allow_all = Rule(action="allow")
         prof.rules = Rules(id=profile,
-                           inbound_rules=[Rule(action="allow")],
-                           outbound_rules=[Rule(action="allow")])
+                           inbound_rules=[allow_slave, allow_self],
+                           outbound_rules=[allow_all])
         datastore.profile_update_rules(prof)
     _log.info("Adding container %s to profile %s", cont_id, profile)
     endpoint.profile_ids = [profile]
