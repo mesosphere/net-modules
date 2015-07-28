@@ -74,6 +74,7 @@ const char* cleanupKey = "cleanup_command";
 const char* isolateKey = "isolate_command";
 const char* ipamKey = "ipam_command";
 const char* pythonPath = "/usr/bin/python";
+const char* ipAddressLabelKey = "MesosContainerizer.NetworkSettings.IPAddress";
 
 hashmap<ContainerID, Info*> *infos = NULL;
 hashmap<ExecutorID, ContainerID> *executors = NULL;
@@ -230,6 +231,37 @@ static Isolator* createCalicoIsolator(const Parameters& parameters)
 // TODO(karya): Use the hooks for Task Status labels.
 class CalicoHook : public Hook
 {
+  virtual Result<Labels> slaveTaskStatusLabelDecorator(
+      const FrameworkID& frameworkId,
+      const TaskStatus& status)
+  {
+    const ExecutorID executorId = status.executor_id();
+    if (executors == NULL || !executors->contains(executorId)) {
+      return None();
+    }
+
+    const ContainerID containerId = executors->at(executorId);
+    if (infos == NULL || !infos->contains(containerId)) {
+      return None();
+    }
+
+    const Info* info = (*infos)[containerId];
+    if (info->ipAddress.isNone()) {
+      return None();
+    }
+
+    Labels labels;
+    if (status.has_labels()) {
+      labels.CopyFrom(status.labels());
+    }
+
+    // Set IPAddress label.
+    Label* label = labels.add_labels();
+    label->set_key(ipAddressLabelKey);
+    label->set_value(info->ipAddress.get());
+
+    return labels;
+  }
 };
 
 
