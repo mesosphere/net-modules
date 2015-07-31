@@ -52,6 +52,7 @@
 
 #include <process/future.hpp>
 #include <process/owned.hpp>
+#include <process/process.hpp>
 #include <process/subprocess.hpp>
 #include <process/io.hpp>
 
@@ -60,270 +61,26 @@
 #include <stout/hashmap.hpp>
 #include <stout/option.hpp>
 
+#include "network_isolator.hpp"
+
 using namespace mesos;
+using namespace process;
 
+using mesos::slave::ContainerPrepareInfo;
 using mesos::slave::Isolator;
-
-struct Info
-{
-  Info(const Option<std::string>& _ipAddress,
-      const Option<std::string>& _profile)
-    : ipAddress(_ipAddress),
-      profile(_profile) {}
-
-  // The IP address to assign to the container, or NONE for auto-assignment.
-  const Option<std::string> ipAddress;
-
-  // The network profile name to assign to the container, or NONE for the
-  // default.
-  const Option<std::string> profile;
-};
 
 const char* initializationKey = "initialization_command";
 const char* cleanupKey = "cleanup_command";
 const char* isolateKey = "isolate_command";
 const char* ipamKey = "ipam_command";
 const char* pythonPath = "/usr/bin/python";
+const char* ipAddressLabelKey = "MesosContainerizer.NetworkSettings.IPAddress";
 
 hashmap<ContainerID, Info*> *infos = NULL;
 hashmap<ExecutorID, ContainerID> *executors = NULL;
 
-class CalicoIsolatorProcess : public mesos::slave::IsolatorProcess
-{
-public:
-  static Try<mesos::slave::Isolator*> create(const Parameters& parameters)
-  {
-    return new Isolator(process::Owned<IsolatorProcess>(
-        new CalicoIsolatorProcess(parameters)));
-  }
 
-  virtual ~CalicoIsolatorProcess() {}
-
-  virtual process::Future<Option<int>> namespaces()
-  {
-    return CLONE_NEWNET;
-  }
-
-  virtual process::Future<Nothing> recover(
-      const std::list<mesos::slave::ExecutorRunState>& states,
-      const hashset<ContainerID>& orphans)
-  {
-    return Nothing();
-  }
-
-  virtual process::Future<Option<CommandInfo>> prepare(
-      const ContainerID& containerId,
-      const ExecutorInfo& executorInfo,
-      const std::string& directory,
-      const Option<std::string>& rootfs,
-      const Option<std::string>& user)
-  {
-    LOG(INFO) << "CalicoIsolator::prepare";
-
-#if 0
-    std::string ipAddress = "auto";
-    std::string profile = "none";
-    foreach (const Environment_Variable& var,
-             executorInfo.command().environment().variables()) {
-      LOG(INFO) << "ENV: " << var.name() << "=" << var.value();
-      if (var.name() == "CALICO_IP") {
-        ipAddress = var.value();
-      }
-      else if (var.name() == "CALICO_PROFILE") {
-        profile = var.value();
-      }
-    }
-    infos[containerId] = new Info(ipAddress, profile);
-#endif
-
-    (*executors)[executorInfo.executor_id()] = containerId;
-
-    foreach (const Parameter& parameter, parameters.parameter()) {
-      if (parameter.key() == initializationKey) {
-        CommandInfo commandInfo;
-        commandInfo.set_value(parameter.value());
-        return commandInfo;
-      }
-    }
-    return None();
-  }
-
-  // TODO(kapil): File a Mesos ticket to extend isolate() signature
-  // to include ExecutorInfo.
-  virtual process::Future<Nothing> isolate(
-      const ContainerID& containerId,
-      pid_t pid)
-  {
-    const Info* info = (*infos)[containerId];
-    foreach (const Parameter& parameter, parameters.parameter()) {
-      if (parameter.key() == isolateKey) {
-        std::vector<std::string> argv(7);
-        argv[0] = "python";
-        argv[1] = parameter.value();
-        argv[2] = "isolate";
-        argv[3] = stringify(pid);
-        argv[4] = containerId.value();
-        argv[5] = stringify(info->ipAddress.get());
-        argv[6] = stringify(info->profile.get());
-        Try<process::Subprocess> child = process::subprocess(pythonPath, argv);
-        CHECK_SOME(child);
-        waitpid(child.get().pid(), NULL, 0);
-        break;
-      }
-    }
-    return Nothing();
-  }
-
-  virtual process::Future<mesos::slave::Limitation> watch(
-      const ContainerID& containerId)
-  {
-    return process::Future<mesos::slave::Limitation>();
-  }
-
-  virtual process::Future<Nothing> update(
-      const ContainerID& containerId,
-      const Resources& resources)
-  {
-    return Nothing();
-  }
-
-  virtual process::Future<ResourceStatistics> usage(
-      const ContainerID& containerId)
-  {
-    return ResourceStatistics();
-  }
-
-  virtual process::Future<Nothing> cleanup(
-      const ContainerID& containerId)
-  {
-    if (!infos->contains(containerId)) {
-      LOG(WARNING) << "Ignoring cleanup for unknown container " << containerId;
-      return Nothing();
-    }
-    infos->erase(containerId);
-    foreach (const Parameter& parameter, parameters.parameter()) {
-      if (parameter.key() == cleanupKey) {
-        std::vector<std::string> argv(4);
-        argv[0] = "python";
-        argv[1] = parameter.value();
-        argv[2] = "cleanup";
-        argv[3] = containerId.value();
-        Try<process::Subprocess> child = process::subprocess(pythonPath, argv);
-        CHECK_SOME(child);
-        waitpid(child.get().pid(), NULL, 0);
-        break;
-      }
-    }
-    return Nothing();
-  }
-
-private:
-  CalicoIsolatorProcess(const Parameters& parameters_)
-    : parameters(parameters_) {}
-
-  const Parameters parameters;
-};
-
-
-static Isolator* createCalicoIsolator(const Parameters& parameters)
-{
-  LOG(INFO) << "Loading Calico Isolator module";
-  if (infos == NULL) {
-    infos = new hashmap<ContainerID, Info*>();
-    CHECK(executors == NULL);
-    executors = new hashmap<ExecutorID, ContainerID>();
-  }
-
-  Try<Isolator*> result = CalicoIsolatorProcess::create(parameters);
-  if (result.isError()) {
-    return NULL;
-  }
-  return result.get();
-}
-
-
-
-class CalicoHook : public Hook
-{
-public:
-  // We need this hook to set "LIBPROCESS_IP" environment for the
-  // executor. This would force the executor to bind to the given IP
-  // instead of binding to the loopback IP.
-  // In this hook, we create a new environment variable "LIBPROCESS_IP"
-  // TODO(kapil): File a Mesos ticket to extend this signature
-  // to also include ContainerID.
-  virtual Result<Environment> slaveExecutorEnvironmentDecorator(
-      const ExecutorInfo& executorInfo)
-  {
-    LOG(INFO) << "CalicoHook::slaveExecutorEnvironmentDecorator";
-
-    Environment environment;
-
-    if (executorInfo.command().has_environment()) {
-      environment.CopyFrom(executorInfo.command().environment());
-    }
-
-    std::string ipAddress = "auto";
-    std::string profile = "none";
-    foreach (const Environment_Variable& var,
-             executorInfo.command().environment().variables()) {
-      LOG(INFO) << "ENV: " << var.name() << "=" << var.value();
-      if (var.name() == "CALICO_IP") {
-        ipAddress = var.value();
-      }
-      else if (var.name() == "CALICO_PROFILE") {
-        profile = var.value();
-      }
-    }
-
-    if (ipAddress == "auto") {
-      std::vector<std::string> argv(3);
-      argv[0] = "python";
-      argv[1] = ipamPath;
-      argv[2] = "assign_ipv4";
-      Try<process::Subprocess> child = process::subprocess(
-                                                 pythonPath,
-                                                 argv,
-                                                 process::Subprocess::PIPE(),
-                                                 process::Subprocess::PIPE(),
-                                                 process::Subprocess::PIPE());
-      CHECK_SOME(child);
-      waitpid(child.get().pid(), NULL, 0);
-      ipAddress = process::io::read(child.get().out().get()).get();
-      LOG(INFO) << "Got IP " << ipAddress << " from IPAM.";
-    }
-
-    foreach (const Environment_Variable& var,
-             executorInfo.command().environment().variables()) {
-      if (var.name() != "LIBPROCESS_IP") {
-        environment.add_variables()->CopyFrom(var);
-      }
-    }
-
-    Environment::Variable* variable = environment.add_variables();
-    variable->set_name("LIBPROCESS_IP");
-    variable->set_value(ipAddress);
-    LOG(INFO) << "LIBPROCESS_IP=" << ipAddress;
-
-    if (!executors->contains(executorInfo.executor_id())) {
-      LOG(WARNING) << "Unknown executor " << executorInfo.executor_id();
-      return Error("Unknown executor");
-    }
-    const ContainerID containerId = executors->at(executorInfo.executor_id());
-    (*infos)[containerId] = new Info(ipAddress, profile);
-
-    return environment;
-  }
-
-  CalicoHook(const std::string ipamPath_)
-    : ipamPath(ipamPath_) {}
-
-private:
-  const std::string ipamPath;
-};
-
-
-static Hook* createCalicoHook(const Parameters& parameters)
+Try<Isolator*> CalicoIsolatorProcess::create(const Parameters& parameters)
 {
   std::string ipamPath = "";
   foreach (const Parameter& parameter, parameters.parameter()) {
@@ -331,8 +88,186 @@ static Hook* createCalicoHook(const Parameters& parameters)
       ipamPath = parameter.value();
     }
   }
-  LOG(INFO) << "IPAM script: " << ipamPath;
-  return new CalicoHook(ipamPath);
+  if (ipamPath == "") {
+    LOG(WARNING) << "IPAM path not specified";
+    return Error("IPAM path not specified.");
+  }
+  return new CalicoIsolator(process::Owned<CalicoIsolatorProcess>(
+      new CalicoIsolatorProcess(ipamPath, parameters)));
+}
+
+
+process::Future<Option<ContainerPrepareInfo>> CalicoIsolatorProcess::prepare(
+    const ContainerID& containerId,
+    const ExecutorInfo& executorInfo,
+    const std::string& directory,
+    const Option<std::string>& rootfs,
+    const Option<std::string>& user)
+{
+  LOG(INFO) << "CalicoIsolator::prepare";
+
+  std::string ipAddress = "auto";
+  std::string profile = "none";
+  foreach (const Environment_Variable& var,
+      executorInfo.command().environment().variables()) {
+    LOG(INFO) << "ENV: " << var.name() << "=" << var.value();
+    if (var.name() == "CALICO_IP") {
+      ipAddress = var.value();
+    }
+    else if (var.name() == "CALICO_PROFILE") {
+      profile = var.value();
+    }
+  }
+
+  if (ipAddress == "auto") {
+    std::vector<std::string> argv(3);
+    argv[0] = "python";
+    argv[1] = ipamPath;
+    argv[2] = "assign_ipv4";
+    Try<process::Subprocess> child = process::subprocess(
+        pythonPath,
+        argv,
+        process::Subprocess::PIPE(),
+        process::Subprocess::PIPE(),
+        process::Subprocess::PIPE());
+    CHECK_SOME(child);
+    waitpid(child.get().pid(), NULL, 0);
+    ipAddress = process::io::read(child.get().out().get()).get();
+    LOG(INFO) << "Got IP " << ipAddress << " from IPAM.";
+  }
+
+  LOG(INFO) << "LIBPROCESS_IP=" << ipAddress;
+
+  ContainerPrepareInfo prepareInfo;
+
+  Environment::Variable* variable =
+    prepareInfo.mutable_environment()->add_variables();
+  variable->set_name("LIBPROCESS_IP");
+  variable->set_value(ipAddress);
+
+  foreach (const Parameter& parameter, parameters.parameter()) {
+    if (parameter.key() == initializationKey) {
+      prepareInfo.add_commands()->set_value(parameter.value());
+    }
+  }
+
+  (*infos)[containerId] = new Info(ipAddress, profile);
+  (*executors)[executorInfo.executor_id()] = containerId;
+
+  return prepareInfo;
+}
+
+
+process::Future<Nothing> CalicoIsolatorProcess::isolate(
+    const ContainerID& containerId,
+    pid_t pid)
+{
+  const Info* info = (*infos)[containerId];
+  foreach (const Parameter& parameter, parameters.parameter()) {
+    if (parameter.key() == isolateKey) {
+      std::vector<std::string> argv(7);
+      argv[0] = "python";
+      argv[1] = parameter.value();
+      argv[2] = "isolate";
+      argv[3] = stringify(pid);
+      argv[4] = containerId.value();
+      argv[5] = stringify(info->ipAddress.get());
+      argv[6] = stringify(info->profile.get());
+      Try<process::Subprocess> child = process::subprocess(pythonPath, argv);
+      CHECK_SOME(child);
+      waitpid(child.get().pid(), NULL, 0);
+      break;
+    }
+  }
+  return Nothing();
+}
+
+
+process::Future<Nothing> CalicoIsolatorProcess::cleanup(
+    const ContainerID& containerId)
+{
+  if (!infos->contains(containerId)) {
+    LOG(WARNING) << "Ignoring cleanup for unknown container " << containerId;
+    return Nothing();
+  }
+  infos->erase(containerId);
+  foreach (const Parameter& parameter, parameters.parameter()) {
+    if (parameter.key() == cleanupKey) {
+      std::vector<std::string> argv(4);
+      argv[0] = "python";
+      argv[1] = parameter.value();
+      argv[2] = "cleanup";
+      argv[3] = containerId.value();
+      Try<process::Subprocess> child = process::subprocess(pythonPath, argv);
+      CHECK_SOME(child);
+      waitpid(child.get().pid(), NULL, 0);
+      break;
+    }
+  }
+  return Nothing();
+}
+
+
+static Isolator* createCalicoIsolator(const Parameters& parameters)
+{
+  LOG(INFO) << "Loading Calico Isolator module";
+
+  if (infos == NULL) {
+    infos = new hashmap<ContainerID, Info*>();
+    CHECK(executors == NULL);
+    executors = new hashmap<ExecutorID, ContainerID>();
+  }
+
+  Try<Isolator*> result = CalicoIsolatorProcess::create(parameters);
+
+  if (result.isError()) {
+    return NULL;
+  }
+
+  return result.get();
+}
+
+
+// TODO(karya): Use the hooks for Task Status labels.
+class CalicoHook : public Hook
+{
+  virtual Result<Labels> slaveTaskStatusLabelDecorator(
+      const FrameworkID& frameworkId,
+      const TaskStatus& status)
+  {
+    const ExecutorID executorId = status.executor_id();
+    if (executors == NULL || !executors->contains(executorId)) {
+      return None();
+    }
+
+    const ContainerID containerId = executors->at(executorId);
+    if (infos == NULL || !infos->contains(containerId)) {
+      return None();
+    }
+
+    const Info* info = (*infos)[containerId];
+    if (info->ipAddress.isNone()) {
+      return None();
+    }
+
+    Labels labels;
+    if (status.has_labels()) {
+      labels.CopyFrom(status.labels());
+    }
+
+    // Set IPAddress label.
+    Label* label = labels.add_labels();
+    label->set_key(ipAddressLabelKey);
+    label->set_value(info->ipAddress.get());
+
+    return labels;
+  }
+};
+
+
+static Hook* createCalicoHook(const Parameters& parameters)
+{
+  return new CalicoHook();
 }
 
 

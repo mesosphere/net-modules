@@ -47,4 +47,4 @@ fi
 # that we'll modify a lot of files in 3rdparty/libprocess, but that
 # may change in the future.
 
-autoreconf --install -Wall --verbose "${@}"
+autoreconf --install --force -Wall --verbose "${@}"
