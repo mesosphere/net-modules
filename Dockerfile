@@ -124,6 +124,11 @@ RUN wget https://github.com/Metaswitch/calico-docker/releases/download/v0.5.1/ca
     chmod +x calicoctl && \
     mv calicoctl /usr/local/bin/
 
+##################
+# Sample Flask App
+#################
+COPY ./test/sampleflaskapp.tgz /mesos/sampleflaskapp.tgz
+
 #################
 # Init scripts
 #################
