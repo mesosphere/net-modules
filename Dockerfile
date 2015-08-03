@@ -71,6 +71,12 @@ RUN easy_install /mesos/build/src/python/dist/mesos.interface-*.egg
 RUN easy_install /mesos/build/src/python/dist/mesos.native-*.egg
 
 ####################
+# Mesos-DNS
+####################
+RUN wget https://dl.dropboxusercontent.com/u/4550074/mesos/mesos-dns -O /usr/bin/mesos-dns && \
+    chmod +x /usr/bin/mesos-dns
+
+####################
 # Isolator
 ####################
 
@@ -130,3 +136,5 @@ RUN wget https://github.com/Metaswitch/calico-docker/releases/download/v0.5.1/ca
 ADD ./init_scripts/etc/service/mesos_slave/run /etc/service/mesos_slave/run
 ADD ./init_scripts/etc/service/docker/run /etc/service/docker/run
 ADD ./init_scripts/etc/service/calico/run /etc/service/calico/run
+ADD ./init_scripts/etc/service/mesos-dns/run /etc/service/mesos-dns/run
+ADD ./init_scripts/etc/config/mesos-dns.json /etc/config/mesos-dns.json
