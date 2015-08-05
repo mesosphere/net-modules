@@ -233,20 +233,25 @@ class CalicoHook : public Hook
 {
   virtual Result<Labels> slaveTaskStatusLabelDecorator(
       const FrameworkID& frameworkId,
+      const ExecutorID& executorId,
       const TaskStatus& status)
   {
-    const ExecutorID executorId = status.executor_id();
-    if (executors == NULL || !executors->contains(executorId)) {
+    LOG(INFO) << "CalicoHook::task status label decorator";
+
+    if (!executors->contains(executorId)) {
+      LOG(WARNING) << "CalicoHook:: no valid container id for: " << executorId;
       return None();
     }
 
     const ContainerID containerId = executors->at(executorId);
     if (infos == NULL || !infos->contains(containerId)) {
+      LOG(WARNING) << "CalicoHook:: no valid infos for: " << containerId;
       return None();
     }
 
     const Info* info = (*infos)[containerId];
     if (info->ipAddress.isNone()) {
+      LOG(WARNING) << "CalicoHook:: no valid IP address";
       return None();
     }
 
@@ -260,6 +265,8 @@ class CalicoHook : public Hook
     label->set_key(ipAddressLabelKey);
     label->set_value(info->ipAddress.get());
 
+    LOG(INFO) << "CalicoHook:: added label "
+              << label->key() << ":" << label->value();
     return labels;
   }
 };

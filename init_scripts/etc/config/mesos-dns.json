@@ -1,7 +1,7 @@
 {
-  "zk": "zk://zookeeper:2181/mesos",
+  "zk": "",
   "masters": ["mesosmaster:5050"],
-  "refreshSeconds": 60,
+  "refreshSeconds": 5,
   "ttl": 60,
   "domain": "mesos",
   "port": 53,
