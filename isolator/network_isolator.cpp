@@ -233,11 +233,16 @@ class CalicoHook : public Hook
 {
   virtual Result<Labels> slaveTaskStatusLabelDecorator(
       const FrameworkID& frameworkId,
-      const ExecutorID& executorId,
       const TaskStatus& status)
   {
     LOG(INFO) << "CalicoHook::task status label decorator";
 
+    if (!status.has_executor_id()) {
+      LOG(WARNING) << "CalicoHook:: task status has no valid executor id";
+      return None();
+    }
+
+    const ExecutorID executorId = status.executor_id();
     if (!executors->contains(executorId)) {
       LOG(WARNING) << "CalicoHook:: no valid container id for: " << executorId;
       return None();
