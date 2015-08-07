@@ -41,6 +41,9 @@
 AUTOMAKE_OPTIONS = subdir-objects
 ACLOCAL_AMFLAGS = -I m4
 
+PROTOC = @PROTOCOMPILER@
+PROTOCFLAGS=-I$(top_srcdir)/isolator ${MESOS_INCLUDE_PATH}
+
 # We want to install modules in mesos directory.
 pkglibdir = $(libdir)/mesos
 
@@ -58,7 +61,12 @@ MESOS_CPPFLAGS += -I$(top_srcdir)/include
 # Setup CPPFLAGS that are used for most source files.
 AM_CPPFLAGS = $(MESOS_CPPFLAGS) -Wall -Werror
 
+CXX_PROTOS = isolator/interface.pb.cc isolator/interface.ph.h
+ 
+%.pb.cc %.pb.h: %.proto
+	$(PROTOC) $(PROTOCFLAGS) --cpp_out=isolator/. $^
+
 # Library containing kerberos ticket forwarding module.
 pkglib_LTLIBRARIES += libcalico_isolator.la
-libcalico_isolator_la_SOURCES = isolator/network_isolator.cpp
+libcalico_isolator_la_SOURCES = isolator/network_isolator.cpp ${CXX_PROTOS}
 libcalico_isolator_la_LDFLAGS = -release $(PACKAGE_VERSION) -shared $(MESOS_LDFLAGS)

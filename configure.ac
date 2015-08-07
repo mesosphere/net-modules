@@ -34,33 +34,42 @@ AC_ARG_WITH([mesos_build_dir],
             [mesos_build_dir=$withval],
             [mesos_build_dir=no])
 
+AC_ARG_WITH([protobuf],
+            [AS_HELP_STRING([--with-protobuf=dir],
+                            [provide install location of protobuf])],
+            [protobuf=$withval],
+            [protobuf=/usr])
+
 if test -d "$mesos"; then
-  MESOS_CPPFLAGS="-I${mesos}/include"
+  MESOS_INCLUDE_PATH="-I${mesos}/include"
   MESOS_LDFLAGS="-L${mesos}/lib64 -lmesos -lglog -lprotobuf"
 else
 
   if test -d "$mesos_root"; then
-    MESOS_CPPFLAGS="${MESOS_CPPFLAGS} -I${mesos_root}/include"
+    MESOS_INCLUDE_PATH="-I${mesos_root}/include"
 
     # Add libprocess to include path.
-    MESOS_CPPFLAGS="${MESOS_CPPFLAGS} -I${mesos_root}/3rdparty/libprocess/include"
+    MESOS_INCLUDE_PATH="${MESOS_INCLUDE_PATH} -I${mesos_root}/3rdparty/libprocess/include"
 
     # Add stout to include path.
-    MESOS_CPPFLAGS="${MESOS_CPPFLAGS} -I${mesos_root}/3rdparty/libprocess/3rdparty/stout/include"
+    MESOS_INCLUDE_PATH="${MESOS_INCLUDE_PATH} -I${mesos_root}/3rdparty/libprocess/3rdparty/stout/include"
   else
     AC_MSG_ERROR([Invalid mesos path; use --with-mesos-root=<DIR>
                   <DIR> is the top-level directory of the Mesos distribution.])
   fi
 
   if test -d "$mesos_build_dir"; then
-    MESOS_CPPFLAGS="${MESOS_CPPFLAGS} -I${mesos_build_dir}/include"
+    MESOS_INCLUDE_PATH="${MESOS_INCLUDE_PATH} -I${mesos_build_dir}/include"
   else
     AC_MSG_ERROR([Invalid mesos build path; use --with-mesos-build-dir=<DIR>
                   <DIR> is the Mesos build directory.])
   fi
 fi
 
+MESOS_CPPFLAGS="$MESOS_INCLUDE_PATH"
+
 AC_SUBST(MESOS_CPPFLAGS)
+AC_SUBST(MESOS_INCLUDE_PATH)
 AC_SUBST(MESOS_LDFLAGS)
 
 # Check if we are on OSX or Linux.
@@ -148,13 +157,6 @@ AC_CHECK_HEADER([glog/logging.h],
                     [AC_MSG_ERROR([glog is not installed.])])],
                 [AC_MSG_ERROR([cannot find glog header.])])
 
-AC_CHECK_HEADER([google/protobuf/message.h],
-                [AC_LINK_IFELSE(
-                    [AC_LANG_PROGRAM([#include <google/protobuf/message.h>], [])],
-                    [],
-                    [AC_MSG_ERROR([google protobuf is not installed.])])],
-                [AC_MSG_ERROR([google protobuf is not installed.])])
-
 AC_CHECK_HEADER([picojson.h],
                 [],
                 [AC_MSG_ERROR([picojson is not installed.])])
@@ -162,6 +164,40 @@ AC_CHECK_HEADER([picojson.h],
 AC_CHECK_HEADERS([boost/lexical_cast.hpp boost/functional/hash.hpp],
                 [],
                 [AC_MSG_ERROR([boost is not installed.])])
+
+AC_CHECK_HEADER([google/protobuf/message.h],
+                [AC_LINK_IFELSE(
+                    [AC_LANG_PROGRAM([#include <google/protobuf/message.h>], [])],
+                    [],
+                    [AC_MSG_ERROR([google protobuf is not installed.])])],
+                [AC_MSG_ERROR([google protobuf is not installed.])])
+
+# Use the system default prefix if not specified.
+if test -n "`echo $with_protobuf`"; then
+  PROTOBUFPREFIX="${with_protobuf}"
+else
+  PROTOBUFPREFIX="/usr"
+fi
+
+# Check for protobuf.
+AC_CHECK_TOOL([PROTOCOMPILER_TEST], [protoc], [], [$PROTOBUFPREFIX/bin])
+
+if test -z "`echo $PROTOCOMPILER_TEST`"; then
+  AC_MSG_ERROR([protoc not found in PATH
+-------------------------------------------------------------------
+You have requested the use of a non-bundled protobuf but no suitable
+protobuf could be found.
+
+You may want specify the location of protobuf by providing a prefix
+path via --with-protobuf=DIR, or check that the path you provided is
+correct if youre already doing this.
+-------------------------------------------------------------------
+])
+fi
+
+PROTOCOMPILER="$PROTOBUFPREFIX/bin/protoc"
+
+AC_SUBST([PROTOCOMPILER])
 
 # Create Modules JSON blobs.
 AC_CONFIG_FILES([isolator/modules.json], [])
