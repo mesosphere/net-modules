@@ -65,10 +65,10 @@ def initialize():
     print "Empty initialize()."
 
 
-def isolate(cpid, cont_id, ip_str, profile):
+def isolate(cpid, cont_id, ip_str, profile_str):
     _log.info("Isolating executor with Container ID %s, PID %s.",
               cont_id, cpid)
-    _log.info("IP: %s, Profile %s", ip_str, profile)
+    _log.info("IP: %s, Profile(s) %s", ip_str, profile_str)
 
     # Just auto assign ipv4 addresses for now.
     if ip_str.lower() == "auto":
@@ -108,30 +108,54 @@ def isolate(cpid, cont_id, ip_str, profile):
                                      veth_name="eth0",
                                      proc_alias="/proc")
 
-    if profile.lower() == "none":
-        profile = "mesos"
-    if not datastore.profile_exists(profile):
-        _log.info("Autocreating profile %s", profile)
-        datastore.create_profile(profile)
-        prof = datastore.get_profile(profile)
+    if profile_str == "":
+        profiles = ["public"]
+    else:
+        parts = profile_str.split(",")
+        profiles = filter(lambda x: len(x) > 0,
+                          map(lambda x: x.strip(), parts))
 
-        # Set up the profile rules to allow incoming connections from the host
-        # since the slave process will be running there.
-        # Also allow connections from others in the profile.
-        # Deny other connections (default, so not explicitly needed).
-        (ipv4, _) = datastore.get_host_ips(hostname)
-        host_net = ipv4 + "/32"
-        allow_slave = Rule(action="allow", src_net=host_net)
-        allow_self = Rule(action="allow", src_tag=profile)
-        allow_all = Rule(action="allow")
-        prof.rules = Rules(id=profile,
-                           inbound_rules=[allow_slave, allow_self],
-                           outbound_rules=[allow_all])
-        datastore.profile_update_rules(prof)
-    _log.info("Adding container %s to profile %s", cont_id, profile)
-    endpoint.profile_ids = [profile]
-    _log.info("Finished adding container %s to profile %s",
-              cont_id, profile)
+    for profile_id in profiles:
+        if not datastore.profile_exists(profile_id):
+            _log.info("Autocreating profile %s", profile_id)
+            datastore.create_profile(profile_id)
+            prof = datastore.get_profile(profile_id)
+
+            # Set up the profile rules to allow incoming connections from the
+            # host since the slave process will be running there.
+            # Also allow connections from others in the profile.
+            # Deny other connections (default, so not explicitly needed).
+            (ipv4, _) = datastore.get_host_ips(hostname)
+            host_net = ipv4 + "/32"
+            allow_slave = Rule(action="allow", src_net=host_net)
+            allow_self = Rule(action="allow", src_tag=profile_id)
+            allow_all = Rule(action="allow")
+            if profile_id == "public":
+                # 'public' profile is a special case, and we allow anything to
+                # connect to it.
+                prof.rules = Rules(id=profile_id,
+                                   inbound_rules=[allow_all],
+                                   outbound_rules=[allow_all])
+            else:
+                prof.rules = Rules(id=profile_id,
+                                   inbound_rules=[allow_slave, allow_self],
+                                   outbound_rules=[allow_all])
+            datastore.profile_update_rules(prof)
+        else:
+            # Profile already exists.  Modify it to accept connections from
+            # this slave if it doesn't already.
+            prof = datastore.get_profile(profile_id)
+            allow_slave = Rule(action="allow", src_net=host_net)
+            if allow_slave not in prof.rules.inbound_rules:
+                _log.info("Adding %s rule to profile %s",
+                          allow_slave.pprint(), profile_id)
+                prof.rules.inbound_rules.append(allow_slave)
+                datastore.profile_update_rules(prof)
+
+    _log.info("Adding container %s to profile(s) %s", cont_id, profiles)
+    endpoint.profile_ids = profiles
+    _log.info("Finished adding container %s to profiles %s",
+              cont_id, profiles)
 
     datastore.set_endpoint(endpoint)
     _log.info("Finished network for container %s, IP=%s", cont_id, ip)
