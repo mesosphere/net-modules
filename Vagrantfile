@@ -6,8 +6,7 @@ VAGRANTFILE_API_VERSION = "2"
 Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
 
   # Every Vagrant virtual environment requires a box to build off of.
-  config.vm.box     = "precise64"
-  config.vm.box_url = "http://files.vagrantup.com/precise64.box"
+  config.vm.box     = "ubuntu/trusty64"
 
   # Create a forwarded port mapping which allows access to a specific port
   # within the machine from a port on the host machine. In the example below,
@@ -67,7 +66,7 @@ SCRIPT
   config.vm.provision "docker" do |d|
     d.pull_images "mesosphere/mesos-modules-dev:latest"
     d.pull_images "mesosphere/mesos-modules-dev-phusion:latest"
-    d.pull_images "mesosphere/marathon:v0.9.1"
+    d.pull_images "mesosphere/marathon:v0.8.1"
     d.pull_images "jplock/zookeeper:3.4.5"
     d.pull_images "spikecurtis/single-etcd"
   end
