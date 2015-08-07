@@ -1,5 +1,5 @@
 #!/bin/bash
-docker-compose -p modules up -d
+docker-compose up -d
 cd `dirname $0`
 
 # Wait for the marathon container to come up

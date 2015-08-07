@@ -19,7 +19,8 @@ mesosmaster:
     - zookeeper
 
 slave1:
-  image: mesosphere/slave
+  build: .
+  hostname: slave1.service.consul
   privileged: true
   ports:
     - "5051:5051"
@@ -27,6 +28,34 @@ slave1:
     - mesosmaster
     - zookeeper
     - etcd
+    - consul
+  volumes:
+    - /var/log/mesos:/var/log/mesos
+  environment:
+    - MESOS_MASTER=zk://zookeeper:2181/mesos
+    - MESOS_EXECUTOR_REGISTRATION_TIMEOUT=5mins
+    - MESOS_CONTAINERIZERS=mesos
+    - MESOS_ISOLATOR=cgroups/cpu,cgroups/mem
+    - MESOS_LOG_DIR=/var/log
+    - MESOS_RESOURCES=ports(*):[31000-31100]
+    - MESOS_MODULES=file:///isolator/build/isolator/modules.json
+    - MESOS_ISOLATION=com_mesosphere_mesos_CalicoIsolator
+    - MESOS_HOOKS=com_mesosphere_mesos_CalicoHook
+    - ETCD_AUTHORITY=etcd:4001
+  dns:
+   - 192.168.255.254
+
+slave2:
+  build: .
+  hostname: slave2.service.consul
+  privileged: true
+  ports:
+    - "5052:5051"
+  links:
+    - mesosmaster
+    - zookeeper
+    - etcd
+    - consul
   volumes:
     - /var/log/mesos:/var/log/mesos
   environment:
@@ -44,31 +73,6 @@ slave1:
   dns:
    - 192.168.255.254
 
-slave2:
-  image: mesosphere/slave
-  privileged: true
-  ports:
-    - "5052:5051"
-  links:
-    - mesosmaster
-    - zookeeper
-    - etcd
-  volumes:
-    - /var/log/mesos:/var/log/mesos
-  environment:
-    - MESOS_MASTER=zk://zookeeper:2181/mesos
-    - MESOS_EXECUTOR_REGISTRATION_TIMEOUT=5mins
-    - MESOS_CONTAINERIZERS=mesos
-    - MESOS_ISOLATOR=cgroups/cpu,cgroups/mem
-    - MESOS_LOG_DIR=/var/log
-    - MESOS_RESOURCES=ports(*):[31000-31100]
-    - MESOS_MODULES=file:///isolator/build/isolator/modules.json
-    - MESOS_ISOLATION=com_mesosphere_mesos_CalicoIsolator
-    - MESOS_HOOKS=com_mesosphere_mesos_CalicoHook
-    - ETCD_AUTHORITY=etcd:4001
-  dns:
-   - 192.168.255.254
-
 marathon:
   image: mesosphere/marathon:v0.9.1
   environment:
@@ -83,3 +87,7 @@ marathon:
 
 etcd:
   image: spikecurtis/single-etcd
+
+consul:
+  image: progrium/consul
+  command: "-server -bootstrap-expect 1"
