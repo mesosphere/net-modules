@@ -4,4 +4,6 @@ set -o errexit -o nounset -o pipefail
 
 echo "Destroying group 'stars'"
 
-curl -X DELETE http://$(boot2docker ip):8080/v2/groups/star?force=true
+VM=10.141.141.10
+
+curl -X DELETE http://$VM:8080/v2/groups/star?force=true
