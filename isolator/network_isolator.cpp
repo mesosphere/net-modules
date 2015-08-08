@@ -78,6 +78,7 @@ const char* ipAddressLabelKey = "MesosContainerizer.NetworkSettings.IPAddress";
 
 hashmap<ContainerID, Info*> *infos = NULL;
 hashmap<ExecutorID, ContainerID> *executors = NULL;
+hashmap<ExecutorID, std::string> *netgroups = NULL;
 
 
 Try<Isolator*> CalicoIsolatorProcess::create(const Parameters& parameters)
@@ -216,6 +217,8 @@ static Isolator* createCalicoIsolator(const Parameters& parameters)
     infos = new hashmap<ContainerID, Info*>();
     CHECK(executors == NULL);
     executors = new hashmap<ExecutorID, ContainerID>();
+    CHECK(netgroups == NULL);
+    netgroups = new hashmap<ExecutorID, std::string>();
   }
 
   Try<Isolator*> result = CalicoIsolatorProcess::create(parameters);
@@ -231,6 +234,22 @@ static Isolator* createCalicoIsolator(const Parameters& parameters)
 // TODO(karya): Use the hooks for Task Status labels.
 class CalicoHook : public Hook
 {
+  virtual Result<Labels> slaveRunTaskLabelDecorator(
+      const TaskInfo& taskInfo,
+      const ExecutorInfo& executorInfo,
+      const FrameworkInfo& frameworkInfo,
+      const SlaveInfo& slaveInfo)
+  {
+    if (taskInfo.has_labels()) {
+      foreach (const Label& label, taskInfo.labels().labels()) {
+        if (label.key() == netgroupsLabelKey) {
+          (*netgroups)[executorInfo.executor_id()] = label.value();
+        }
+      }
+    }
+    return None();
+  }
+
   virtual Result<Labels> slaveTaskStatusLabelDecorator(
       const FrameworkID& frameworkId,
       const TaskStatus& status)
