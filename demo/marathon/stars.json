@@ -7,6 +7,7 @@
       "cmd": "chmod u+x ./star-probe* && ./star-probe-v0.3.0-linux-x86_64 --urls=http://container.probe-b-star.marathon.mesos:9000/status,http://container.probe-c-star.marathon.mesos:9000/status",
       "cpus": 0.1,
       "mem": 64.0,
+      "ports": [],
       "env": {
         "CALICO_IP": "auto",
         "CALICO_PROFILE": "star"
@@ -18,6 +19,7 @@
       "cmd": "chmod u+x ./star-probe* && ./star-probe-v0.3.0-linux-x86_64 --urls=http://container.probe-a-star.marathon.mesos:9000/status,http://container.probe-c-star.marathon.mesos:9000/status",
       "cpus": 0.1,
       "mem": 64.0,
+      "ports": [],
       "env": {
         "CALICO_IP": "auto",
         "CALICO_PROFILE": "star"
@@ -29,6 +31,7 @@
       "cmd": "chmod u+x ./star-probe* && ./star-probe-v0.3.0-linux-x86_64 --urls=http://container.probe-a-star.marathon.mesos:9000/status,http://container.probe-b-star.marathon.mesos:9000/status",
       "cpus": 0.1,
       "mem": 64.0,
+      "ports": [],
       "env": {
         "CALICO_IP": "auto",
         "CALICO_PROFILE": "star"
@@ -40,9 +43,10 @@
       "cmd": "chmod u+x ./star-collect* && ./star-collect-v0.3.0-linux-x86_64",
       "cpus": 0.2,
       "mem": 64.0,
+      "ports": [],
       "env": {
-          "CALICO_IP": "192.168.255.253",
-          "CALICO_PROFILE": "star,public"
+        "CALICO_IP": "192.168.255.253",
+        "CALICO_PROFILE": "star,public"
       }
     }
   ]
