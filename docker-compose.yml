@@ -41,7 +41,6 @@ slave1:
     - MESOS_ISOLATION=com_mesosphere_mesos_CalicoIsolator
     - MESOS_HOOKS=com_mesosphere_mesos_CalicoHook
     - ETCD_AUTHORITY=etcd:4001
-    - GLOG_v=2
   dns:
    - 192.168.255.254
 
