@@ -7,6 +7,6 @@ PROJECT_DIR=$DEMO_DIR/..
 
 echo "Launching cluster with network isolation modules enabled..."
 
-docker-compose -p modules up -d
+docker-compose up -d
 
 $PROJECT_DIR/add-container-route.sh
