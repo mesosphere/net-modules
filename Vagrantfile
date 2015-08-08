@@ -9,7 +9,7 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
   config.vm.box     = "ubuntu/trusty64"
 
   # Visualizer task uses this port.
-  config.vm.network "forwarded_port", guest: 9001, host: 9001 
+  config.vm.network "forwarded_port", guest: 9001, host: 9001
 
   # Create a private network, which allows host-only access to the machine
   # using a specific IP.
@@ -44,6 +44,7 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
 
     echo Checking whether 'docker ps' works...
     docker ps
+
     echo Finished installing docker.
 SCRIPT
 
@@ -53,8 +54,10 @@ SCRIPT
 
     echo Making docker-compose executable...
     chmod +x /usr/local/bin/docker-compose
+
     echo Checking whether 'docker-compose ps' works...
     docker-compose ps
+
     echo Finished installing docker-compose.
 SCRIPT
 
@@ -76,7 +79,7 @@ SCRIPT
   config.vm.provision "docker" do |d|
     d.pull_images "mesosphere/mesos-modules-dev:latest"
     d.pull_images "mesosphere/mesos-modules-dev-phusion:latest"
-    d.pull_images "mesosphere/marathon:v0.8.1"
+    d.pull_images "mesosphere/marathon:v0.9.1"
     d.pull_images "jplock/zookeeper:3.4.5"
     d.pull_images "spikecurtis/single-etcd"
   end
