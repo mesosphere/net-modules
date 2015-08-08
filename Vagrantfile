@@ -8,14 +8,13 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
   # Every Vagrant virtual environment requires a box to build off of.
   config.vm.box     = "ubuntu/trusty64"
 
-  # Create a forwarded port mapping which allows access to a specific port
-  # within the machine from a port on the host machine. In the example below,
-  # accessing "localhost:8080" will access port 80 on the guest machine.
-  # config.vm.network "forwarded_port", guest: 80, host: 8080
+  # Visualizer task uses this port.
+  config.vm.network "forwarded_port", guest: 9001, host: 9001 
 
   # Create a private network, which allows host-only access to the machine
   # using a specific IP.
   config.vm.network "private_network", ip: "10.141.141.10"
+
 
   # If true, then any SSH connections made will enable agent forwarding.
   # Default value: false
@@ -59,9 +58,20 @@ SCRIPT
     echo Finished installing docker-compose.
 SCRIPT
 
+  $install_demo_viz_forwarding = <<SCRIPT
+    echo Setting up forwarding to demo viz
+    iptables -A PREROUTING -t nat -i eth0 -p tcp --dport 9001 -j DNAT --to 192.168.255.253:9001
+    iptables -A FORWARD -p tcp -d 192.168.255.253 --dport 9001 -j ACCEPT
+
+    echo Finished setting up port forwarding to demo viz
+SCRIPT
+
+
   config.vm.provision "shell", inline: $install_docker
 
   config.vm.provision "shell", inline: $install_docker_compose
+
+  config.vm.provision "shell", inline: $install_demo_viz_forwarding
 
   config.vm.provision "docker" do |d|
     d.pull_images "mesosphere/mesos-modules-dev:latest"
