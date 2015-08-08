@@ -42,7 +42,7 @@
       "mem": 64.0,
       "env": {
           "CALICO_IP": "192.168.255.253",
-          "CALICO_PROFILE": "star,star-public"
+          "CALICO_PROFILE": "star,public"
       }
     }
   ]
