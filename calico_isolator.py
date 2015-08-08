@@ -115,6 +115,9 @@ def isolate(cpid, cont_id, ip_str, profile_str):
         profiles = filter(lambda x: len(x) > 0,
                           map(lambda x: x.strip(), parts))
 
+    (ipv4, _) = datastore.get_host_ips(hostname)
+    host_net = ipv4 + "/32"
+    allow_slave = Rule(action="allow", src_net=host_net)
     for profile_id in profiles:
         if not datastore.profile_exists(profile_id):
             _log.info("Autocreating profile %s", profile_id)
@@ -125,9 +128,6 @@ def isolate(cpid, cont_id, ip_str, profile_str):
             # host since the slave process will be running there.
             # Also allow connections from others in the profile.
             # Deny other connections (default, so not explicitly needed).
-            (ipv4, _) = datastore.get_host_ips(hostname)
-            host_net = ipv4 + "/32"
-            allow_slave = Rule(action="allow", src_net=host_net)
             allow_self = Rule(action="allow", src_tag=profile_id)
             allow_all = Rule(action="allow")
             if profile_id == "public":
@@ -145,7 +145,6 @@ def isolate(cpid, cont_id, ip_str, profile_str):
             # Profile already exists.  Modify it to accept connections from
             # this slave if it doesn't already.
             prof = datastore.get_profile(profile_id)
-            allow_slave = Rule(action="allow", src_net=host_net)
             if allow_slave not in prof.rules.inbound_rules:
                 _log.info("Adding %s rule to profile %s",
                           allow_slave.pprint(), profile_id)
