@@ -1,10 +1,10 @@
 {
-  "id": "star",
+  "id": "star-iso",
   "apps": [
     {
       "id": "probe-a",
       "uris": ["http://downloads.mesosphere.io/demo/star/v0.3.0/star-probe-v0.3.0-linux-x86_64"],
-      "cmd": "chmod u+x ./star-probe && ./star-probe-v0.3.0-linux-x86_64 --urls=http://container.probe-b-star.marathon.mesos:9000/status,http://container.probe-c-star.marathon.mesos:9000/status",
+      "cmd": "chmod u+x ./star-probe* && ./star-probe-v0.3.0-linux-x86_64 --urls=http://container.probe-b-star-iso.marathon.mesos:9000/status,http://container.probe-c-star-iso.marathon.mesos:9000/status",
       "cpus": 0.1,
       "mem": 64.0,
       "env": {
@@ -15,7 +15,7 @@
     {
       "id": "probe-b",
       "uris": ["http://downloads.mesosphere.io/demo/star/v0.3.0/star-probe-v0.3.0-linux-x86_64"],
-      "cmd": "chmod u+x ./star-probe && ./star-probe-v0.3.0-linux-x86_64 --urls=http://container.probe-a-star.marathon.mesos:9000/status,http://container.probe-c-star.marathon.mesos:9000/status",
+      "cmd": "chmod u+x ./star-probe* && ./star-probe-v0.3.0-linux-x86_64 --urls=http://container.probe-a-star-iso.marathon.mesos:9000/status,http://container.probe-c-star-iso.marathon.mesos:9000/status",
       "cpus": 0.1,
       "mem": 64.0,
       "env": {
@@ -26,7 +26,7 @@
     {
       "id": "probe-c",
       "uris": ["http://downloads.mesosphere.io/demo/star/v0.3.0/star-probe-v0.3.0-linux-x86_64"],
-      "cmd": "chmod u+x ./star-probe && ./star-probe-v0.3.0-linux-x86_64 --urls=http://container.probe-a-star.marathon.mesos:9000/status,http://container.probe-b-star.marathon.mesos:9000/status",
+      "cmd": "chmod u+x ./star-probe* && ./star-probe-v0.3.0-linux-x86_64 --urls=http://container.probe-a-star-iso.marathon.mesos:9000/status,http://container.probe-b-star-iso.marathon.mesos:9000/status",
       "cpus": 0.1,
       "mem": 64.0,
       "env": {
@@ -37,7 +37,7 @@
     {
       "id": "collect",
       "uris": ["http://downloads.mesosphere.io/demo/star/v0.3.0/star-collect-v0.3.0-linux-x86_64"],
-      "cmd": "chmod u+x ./star-collect && ./star-collect-v0.3.0-linux-x86_64",
+      "cmd": "chmod u+x ./star-collect* && ./star-collect-v0.3.0-linux-x86_64",
       "cpus": 0.2,
       "mem": 64.0,
       "env": {
