@@ -31,6 +31,7 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
   config.vm.provider "virtualbox" do |vb|
     vb.customize ["modifyvm", :id, "--cpus", "4"]
     vb.customize ["modifyvm", :id, "--memory", "4096"]
+    vb.customize ["modifyvm", :id, "--natnet1", "10.1.1.0/24"]
   end
 
   # Post-create configuration follows.
@@ -69,12 +70,23 @@ SCRIPT
     echo Finished setting up port forwarding to demo viz
 SCRIPT
 
+  $install_kernel_modules = <<SCRIPT
+    echo Setting up kernel modules
+    modprobe ip6_tables
+    echo "ip6_tables" >> /etc/modules
+    modprobe xt_set
+    echo "xt_set" >> /etc/modules
+
+    echo Finished setting up kernel modules
+SCRIPT
 
   config.vm.provision "shell", inline: $install_docker
 
   config.vm.provision "shell", inline: $install_docker_compose
 
   config.vm.provision "shell", inline: $install_demo_viz_forwarding
+
+  config.vm.provision "shell", inline: $install_kernel_modules
 
   config.vm.provision "docker" do |d|
     d.pull_images "mesosphere/mesos-modules-dev:latest"
