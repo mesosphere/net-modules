@@ -39,8 +39,11 @@
     },
     {
       "id": "collect",
-      "uris": ["http://downloads.mesosphere.io/demo/star/v0.4.0/star-collect-v0.4.0-linux-x86_64"],
-      "cmd": "chmod u+x ./star-collect* && ./star-collect-v0.4.0-linux-x86_64",
+      "uris": [
+        "http://downloads.mesosphere.io/demo/star/v0.4.0/star-collect-v0.4.0-linux-x86_64",
+        "http://downloads.mesosphere.io/demo/star/v0.4.0/resources-isolated.json"
+      ],
+      "cmd": "chmod u+x ./star-collect* && ./star-collect-v0.4.0-linux-x86_64 --resources-file=resources-isolated.json",
       "cpus": 0.2,
       "mem": 64.0,
       "ports": [],
