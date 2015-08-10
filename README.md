@@ -48,7 +48,7 @@ From the `metaswitch-modules` directory
 
 Wait until the cluster is up.  Then
 
-   ./demo/launch-stars.sh
+    ./demo/launch-stars.sh
 
 This brings up the test probes and targets with no isolation---everything can talk to everything else.  Verify by visiting the visualization page.
 
