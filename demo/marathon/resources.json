@@ -1,0 +1,14 @@
+[
+  {
+    "id": "A",
+    "url": "http://container.probe-a-star.marathon.mesos:9000/status"
+  },
+  {
+    "id": "B",
+    "url": "http://container.probe-b-star.marathon.mesos:9000/status"
+  },
+  {
+    "id": "C",
+    "url": "http://container.probe-c-star.marathon.mesos:9000/status"
+  }
+]
