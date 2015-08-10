@@ -1,94 +1,66 @@
-# Building the Modules
+# Mesos + Calico Demo
 
-Mesos modules provide a way to easily extend inner workings of Mesos by creating
-and using shared libraries that are loaded on demand. Modules can be used to
-customize Mesos without having to recompiling/relinking for each specific use
-case. Modules can isolate external dependencies into separate libraries, thus
-resulting into a smaller Mesos core. Modules also make it easy to experiment
-with new features. For example, imagine loadable allocators that contain a VM
-(Lua, Python, …) which makes it possible to try out new allocator algorithms
-written in scripting languages without forcing those dependencies into the
-project. Finally, modules provide an easy way for third parties to easily extend
-Mesos without having to know all the internal details.
+This repository showcases Apache Mesos using Project Calico as the networking solution.
 
-For more details, please see
-[Mesos Modules](http://mesos.apache.org/documentation/latest/modules/).
+To get started you will need either:
+  - a Linux computer running a modern distribution
+  - a Windows or Mac computer where you will run the demo in a Linux VM.
 
+## Vagrant setup
 
-## Prerequisites
+Download and install VirtualBox and Vagrant.
 
-Building Mesos modules requires system-wide installation of google-protobuf,
-glog, boost, and picojson.
+Clone this repository.
 
-## Build Mesos with some unbundled dependencies
+    git clone https://github.com/mesosphere/metaswitch-modules.git
 
-### Preparing Mesos source code
-First we need to prepare Mesos source code.  You can either download the Mesos
-standard release in the form of a tarball and extract it, or clone the git
-repository.
+Start the Vagrant VM.  This will automatically provision the VM.  Sit back and relax, it takes a few minutes to pre-load the Docker images used for the demo.
 
-Let us assume you did extract/clone
-the repository into `~/mesos`. Let us also assume that you build Mesos in a
-subdirectory
-called `build` (`~/mesos/build`).
+## Linux setup
 
-### Building and Installing Mesos
-Next, we need to configure and build Mesos.
-Due to the fact that modules will need to have access to a couple of libprocess
-dependencies, Mesos itself should get built with unbundled dependencies to
-reduce chances of problems introduced by varying versions (libmesos vs. module
-library).
+Install Docker: https://docs.docker.com/installation/
 
-We recommend using the following configure options:
+Install Docker-compose:  https://docs.docker.com/compose/install/
 
-```
-cd <mesos-source-tree>
-mkdir build
-cd build
-../configure --with-glog=/usr/local --with-protobuf=/usr/local --with-boost=/usr/local --prefix=$HOME/usr
-make
-make install
-```
+Load Kernel modules used by Project Calico:
 
-Note that the `--prefix=$HOME/usr` is required only if you don't want to do a system-wide Mesos installation.
+    sudo modprobe ip6_tables
+    sudo modprobe xt_set
 
-## Build Mesos Modules
+Clone this repository.
 
-Once Mesos is built and installed, extract/clone the mesos-modules package. For the sake of this
-example, that could be in `~/mesos-modules`. Note that you should not put
-`mesos-modules` into the `mesos` folder.
+    git clone https://github.com/mesosphere/metaswitch-modules.git
 
-You may now run start building the modules.
+Pre-load Docker images required for the demo
 
-The configuration phase needs to know some details about your Mesos installation
-location, hence the following are used:
-`--with-mesos=/path/to/mesos/installation`
+    cd metaswitch-modules/
+    docker-compose pull
+    
+## Build the demo (Vagrant and Linux)
 
-## Example
-```
-./bootstrap
-mkdir build && cd build
-../configure --with-mesos=/path/to/mesos/installation
-make
-```
+From the `metaswitch-modules` directory
 
-At this point, the Module libraries are ready in `/build/.libs`.
+    docker-compose build
 
-## Using Mesos Modules
-See [Mesos Modules](http://mesos.apache.org/documentation/latest/modules/).
+## Run the demo
 
-## Additional Instructions for using Python Modules
-Currently, due to a bug in the Mesos build system, `import
-mesos.interface.mesos_pb2` fails due to a missing `__init__.py` file. Adjust the
-following command according to your setup and execute:
-```
-cp <mesos-source-tree>/python/src/mesos/__init__.py $(PREFIX)/python2.7/site-packages/mesos/
-```
+    ./demo/launch-cluster.sh
 
-### Update PYTHONPATH
+Wait until the cluster is up.  Then
 
-You need to update PYTHONPATH to point to mesos installed packages as well as
-any of your python scripts/modules that you might be using. Here is an example:
-```
-export PYTHONPATH=$HOME/usr/lib/python2.7/site-packages:$HOME/mesos-modules-private/python:$HOME/mesos-modules-private/pythonHook
-```
+   ./demo/launch-stars.sh
+
+This brings up the test probes and targets with no isolation---everything can talk to everything else.  Verify by visiting the visualization page.
+
+  - Linux: http://192.168.255.253:9001/
+  - Vagrant (from the host OS): http://localhost:9001/
+
+Next, tear down the non-isolated workloads.
+
+    ./demo/stop-starts.sh
+
+Bring up the test probes and targets with isolation.
+
+    ./demo/launch-stars-isolated.sh
+
+Verify by refreshing the visualization page.
