@@ -46,7 +46,7 @@ if test -d "$mesos"; then
   # Use the system default prefix if not specified.
   if test -n "`echo $with_protobuf`"; then
     PROTOC_PATH="${with_protobuf}/bin"
-    MESOS_INCLUDE_PATH="-I${with_protobuf}/include"
+    MESOS_INCLUDE_PATH="${MESOS_INCLUDE_PATH} -I${with_protobuf}/include"
   else
     PROTOC_PATH="/usr/bin"
   fi

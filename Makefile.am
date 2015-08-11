@@ -50,6 +50,8 @@ pkglibdir = $(libdir)/mesos
 # Initialize variables here so we can use += operator everywhere else.
 pkglib_LTLIBRARIES =
 bin_PROGRAMS =
+BUILT_SOURCES =
+CLEANFILES =
 
 # Add compiler and linker flags for pthreads.
 AM_CXXFLAGS = $(PTHREAD_CFLAGS)
@@ -61,8 +63,11 @@ MESOS_CPPFLAGS += -I$(top_srcdir)/include
 # Setup CPPFLAGS that are used for most source files.
 AM_CPPFLAGS = $(MESOS_CPPFLAGS) -Wall -Werror
 
-CXX_PROTOS = isolator/interface.pb.cc isolator/interface.ph.h
+CXX_PROTOS = isolator/interface.pb.cc isolator/interface.pb.h
  
+BUILT_SOURCES += $(CXX_PROTOS)
+CLEANFILES += $(CXX_PROTOS)
+
 %.pb.cc %.pb.h: %.proto
 	$(PROTOC) $(PROTOCFLAGS) --cpp_out=isolator/. $^
 
