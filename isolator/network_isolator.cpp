@@ -208,24 +208,6 @@ process::Future<Option<ContainerPrepareInfo>> CalicoIsolatorProcess::prepare(
 
   LOG(INFO) << "Got IP " << response.get().ipv4(0) << " from IPAM.";
 
-  IsolatorPrepareMessage isolatorMessage;
-  IsolatorPrepareMessage::Args* isolatorArgs = isolatorMessage.mutable_args();
-  isolatorArgs->set_hostname(hostname);
-  isolatorArgs->set_container_id(containerId.value());
-  isolatorArgs->add_ipv4_addrs(response.get().ipv4(0));
-  isolatorArgs->add_ipv6_addrs();
-  isolatorArgs->mutable_netgroups()->CopyFrom(ipamArgs->netgroups());
-
-  LOG(INFO) << "Sending prepare command to Isolator";
-  Try<IsolatorResponse> isolatorResponse =
-    runCommand<IsolatorPrepareMessage, IsolatorResponse>(
-        isolatorClientPath, isolatorMessage);
-  if (isolatorResponse.isError()) {
-    return Failure("Error running prepare command:" + isolatorResponse.error());
-  } else if (isolatorResponse.get().has_error()) {
-    return Failure("Error preparing " + isolatorResponse.get().error());
-  }
-
   ContainerPrepareInfo prepareInfo;
 
   Environment::Variable* variable =
@@ -248,11 +230,18 @@ process::Future<Nothing> CalicoIsolatorProcess::isolate(
   if (infos->contains(containerId)) {
     LOG(FATAL) << "Unknown container id: " << containerId;
   }
+  const Info* info = (*infos)[containerId];
 
   IsolatorIsolateMessage isolatorMessage;
-  isolatorMessage.mutable_args()->set_hostname(hostname);
-  isolatorMessage.mutable_args()->set_container_id(containerId.value());
-  isolatorMessage.mutable_args()->set_pid(pid);
+  IsolatorIsolateMessage::Args* isolatorArgs = isolatorMessage.mutable_args();
+  isolatorArgs->set_hostname(hostname);
+  isolatorArgs->set_container_id(containerId.value());
+  isolatorArgs->set_pid(pid);
+  isolatorArgs->add_ipv4_addrs(info->ipAddress);
+  isolatorArgs->add_ipv6_addrs();
+  foreach (const string& netgroup, info->netgroups) {
+    isolatorArgs->add_netgroups(netgroup);
+  }
 
   LOG(INFO) << "Sending isolate command to Isolator";
   Try<IsolatorResponse> response =

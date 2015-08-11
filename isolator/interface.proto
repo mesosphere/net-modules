@@ -36,26 +36,15 @@ message IPAMResponse {
 }
 
 
-message IsolatorPrepareMessage {
-  message Args {
-    required string hostname = 1;
-    required string container_id = 2;
-    repeated string ipv4_addrs = 3;
-    repeated string ipv6_addrs = 4;
-    repeated string netgroups = 5;
-    optional mesos.Labels labels = 6;
-  }
-
-  required string command = 1 [default = "prepare"];
-  required Args args = 2;
-}
-
-
 message IsolatorIsolateMessage {
   message Args {
     required string hostname = 1;
     required string container_id = 2;
     required uint32 pid = 3;
+    repeated string ipv4_addrs = 4;
+    repeated string ipv6_addrs = 5;
+    repeated string netgroups = 6;
+    optional mesos.Labels labels = 7;
   }
 
   required string command = 1 [default = "isolate"];
