@@ -9,3 +9,6 @@ MARATHON_DIR=$DEMO_DIR/marathon
 echo "Launching group 'stars'"
 
 curl -X POST -H "Content-Type: application/json" http://$VM:8080/v2/groups -d @$MARATHON_DIR/stars.json
+
+echo ""
+echo "Done."

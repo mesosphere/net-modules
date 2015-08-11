@@ -10,5 +10,9 @@
   {
     "id": "C",
     "url": "http://container.probe-c-star-iso.marathon.mesos:9000/status"
+  },
+  {
+    "id": "D",
+    "url": "http://container.probe-d-star-iso.marathon.mesos:9000/status"
   }
 ]

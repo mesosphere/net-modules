@@ -8,8 +8,9 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
   # Every Vagrant virtual environment requires a box to build off of.
   config.vm.box     = "ubuntu/trusty64"
 
-  # Visualizer task uses this port.
+  # Visualizer tasks use these ports.
   config.vm.network "forwarded_port", guest: 9001, host: 9001
+  config.vm.network "forwarded_port", guest: 9002, host: 9002
 
   # Create a private network, which allows host-only access to the machine
   # using a specific IP.
@@ -66,6 +67,9 @@ SCRIPT
     echo Setting up forwarding to demo viz
     iptables -A PREROUTING -t nat -i eth0 -p tcp --dport 9001 -j DNAT --to 192.168.255.253:9001
     iptables -A FORWARD -p tcp -d 192.168.255.253 --dport 9001 -j ACCEPT
+
+    iptables -A PREROUTING -t nat -i eth0 -p tcp --dport 9002 -j DNAT --to 192.168.255.252:9001
+    iptables -A FORWARD -p tcp -d 192.168.255.252 --dport 9001 -j ACCEPT
 
     echo Finished setting up port forwarding to demo viz
 SCRIPT

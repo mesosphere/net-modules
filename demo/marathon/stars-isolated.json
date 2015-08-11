@@ -3,8 +3,8 @@
   "apps": [
     {
       "id": "probe-a",
-      "uris": ["http://downloads.mesosphere.io/demo/star/v0.4.0/star-probe-v0.4.0-linux-x86_64"],
-      "cmd": "chmod u+x ./star-probe* && ./star-probe-v0.4.0-linux-x86_64 --urls=http://container.probe-b-star-iso.marathon.mesos:9000/status,http://container.probe-c-star-iso.marathon.mesos:9000/status",
+      "uris": ["http://downloads.mesosphere.io/demo/star/v0.5.0/star-probe-v0.5.0-linux-x86_64"],
+      "cmd": "chmod u+x ./star-probe* && ./star-probe-v0.5.0-linux-x86_64 --urls=http://container.probe-b-star-iso.marathon.mesos:9000/status,http://container.probe-c-star-iso.marathon.mesos:9000/status,http://container.probe-d-star-iso.marathon.mesos:9000/status",
       "cpus": 0.1,
       "mem": 64.0,
       "ports": [],
@@ -15,8 +15,8 @@
     },
     {
       "id": "probe-b",
-      "uris": ["http://downloads.mesosphere.io/demo/star/v0.4.0/star-probe-v0.4.0-linux-x86_64"],
-      "cmd": "chmod u+x ./star-probe* && ./star-probe-v0.4.0-linux-x86_64 --urls=http://container.probe-a-star-iso.marathon.mesos:9000/status,http://container.probe-c-star-iso.marathon.mesos:9000/status",
+      "uris": ["http://downloads.mesosphere.io/demo/star/v0.5.0/star-probe-v0.5.0-linux-x86_64"],
+      "cmd": "chmod u+x ./star-probe* && ./star-probe-v0.5.0-linux-x86_64 --urls=http://container.probe-a-star-iso.marathon.mesos:9000/status,http://container.probe-c-star-iso.marathon.mesos:9000/status,http://container.probe-d-star-iso.marathon.mesos:9000/status",
       "cpus": 0.1,
       "mem": 64.0,
       "ports": [],
@@ -27,8 +27,20 @@
     },
     {
       "id": "probe-c",
-      "uris": ["http://downloads.mesosphere.io/demo/star/v0.4.0/star-probe-v0.4.0-linux-x86_64"],
-      "cmd": "chmod u+x ./star-probe* && ./star-probe-v0.4.0-linux-x86_64 --urls=http://container.probe-a-star-iso.marathon.mesos:9000/status,http://container.probe-b-star-iso.marathon.mesos:9000/status",
+      "uris": ["http://downloads.mesosphere.io/demo/star/v0.5.0/star-probe-v0.5.0-linux-x86_64"],
+      "cmd": "chmod u+x ./star-probe* && ./star-probe-v0.5.0-linux-x86_64 --urls=http://container.probe-a-star-iso.marathon.mesos:9000/status,http://container.probe-b-star-iso.marathon.mesos:9000/status,http://container.probe-d-star-iso.marathon.mesos:9000/status",
+      "cpus": 0.1,
+      "mem": 64.0,
+      "ports": [],
+      "env": {
+        "CALICO_IP": "auto",
+        "CALICO_PROFILE": "star-2"
+      }
+    },
+    {
+      "id": "probe-d",
+      "uris": ["http://downloads.mesosphere.io/demo/star/v0.5.0/star-probe-v0.5.0-linux-x86_64"],
+      "cmd": "chmod u+x ./star-probe* && ./star-probe-v0.5.0-linux-x86_64 --urls=http://container.probe-a-star-iso.marathon.mesos:9000/status,http://container.probe-b-star-iso.marathon.mesos:9000/status,http://container.probe-c-star-iso.marathon.mesos:9000/status",
       "cpus": 0.1,
       "mem": 64.0,
       "ports": [],
@@ -40,18 +52,17 @@
     {
       "id": "collect",
       "uris": [
-        "http://downloads.mesosphere.io/demo/star/v0.4.0/star-collect-v0.4.0-linux-x86_64",
-        "http://downloads.mesosphere.io/demo/star/v0.4.0/resources-isolated.json"
+        "http://downloads.mesosphere.io/demo/star/v0.5.0/star-collect-v0.5.0-linux-x86_64",
+        "http://downloads.mesosphere.io/demo/star/v0.5.0/star-iso-resources.json"
       ],
-      "cmd": "chmod u+x ./star-collect* && ./star-collect-v0.4.0-linux-x86_64 --resources-file=resources-isolated.json",
+      "cmd": "chmod u+x ./star-collect* && ./star-collect-v0.5.0-linux-x86_64 --resources-file=star-iso-resources.json",
       "cpus": 0.2,
       "mem": 64.0,
       "ports": [],
       "env": {
-          "CALICO_IP": "192.168.255.253",
+          "CALICO_IP": "192.168.255.252",
           "CALICO_PROFILE": "star-1,star-2,public"
       }
     }
   ]
 }
-
