@@ -43,6 +43,14 @@ AC_ARG_WITH([protobuf],
 if test -d "$mesos"; then
   MESOS_INCLUDE_PATH="-I${mesos}/include"
   MESOS_LDFLAGS="-L${mesos}/lib64 -lmesos -lglog -lprotobuf"
+  # Use the system default prefix if not specified.
+  if test -n "`echo $with_protobuf`"; then
+    PROTOC_PATH="${with_protobuf}/bin"
+    MESOS_INCLUDE_PATH="-I${with_protobuf}/include"
+  else
+    PROTOC_PATH="/usr/bin"
+  fi
+
 else
 
   if test -d "$mesos_root"; then
@@ -60,6 +68,9 @@ else
 
   if test -d "$mesos_build_dir"; then
     MESOS_INCLUDE_PATH="${MESOS_INCLUDE_PATH} -I${mesos_build_dir}/include"
+    PROTOBUF="${mesos_build_dir}/3rdparty/libprocess/3rdparty/protobuf-2.5.0"
+    PROTOC_PATH="${PROTOBUF}/src"
+    MESOS_INCLUDE_PATH="${MESOS_INCLUDE_PATH} -I${PROTOBUF}/src"
   else
     AC_MSG_ERROR([Invalid mesos build path; use --with-mesos-build-dir=<DIR>
                   <DIR> is the Mesos build directory.])
@@ -172,32 +183,16 @@ AC_CHECK_HEADER([google/protobuf/message.h],
                     [AC_MSG_ERROR([google protobuf is not installed.])])],
                 [AC_MSG_ERROR([google protobuf is not installed.])])
 
-# Use the system default prefix if not specified.
-if test -n "`echo $with_protobuf`"; then
-  PROTOBUFPREFIX="${with_protobuf}"
-else
-  PROTOBUFPREFIX="/usr"
-fi
-
 # Check for protobuf.
-AC_CHECK_TOOL([PROTOCOMPILER_TEST], [protoc], [], [$PROTOBUFPREFIX/bin])
+AC_CHECK_TOOL([PROTOCOMPILER_TEST], [protoc], [], [$PROTOC_PATH])
 
 if test -z "`echo $PROTOCOMPILER_TEST`"; then
-  AC_MSG_ERROR([protoc not found in PATH
--------------------------------------------------------------------
-You have requested the use of a non-bundled protobuf but no suitable
-protobuf could be found.
-
-You may want specify the location of protobuf by providing a prefix
-path via --with-protobuf=DIR, or check that the path you provided is
-correct if youre already doing this.
--------------------------------------------------------------------
-])
+  AC_MSG_ERROR([protoc not found in $PROTOC_PATH])
 fi
 
-PROTOCOMPILER="$PROTOBUFPREFIX/bin/protoc"
+PROTOCOMPILER="$PROTOC_PATH/protoc"
 
-AC_SUBST([PROTOCOMPILER])
+AC_SUBST(PROTOCOMPILER)
 
 # Create Modules JSON blobs.
 AC_CONFIG_FILES([isolator/modules.json], [])
