@@ -40,7 +40,7 @@ Pre-load Docker images required for the demo
 
 From the `metaswitch-modules` directory
 
-    docker-compose build
+    make images
 
 ## Run the demo
 
