@@ -3,7 +3,7 @@
   "apps": [
     {
       "id": "probe-a",
-      "uris": ["http://downloads.mesosphere.io/demo/star/v0.5.0/star-probe-v0.5.0-linux-x86_64"],
+      "uris": ["file:///star/star-probe-v0.5.0-linux-x86_64"],
       "cmd": "chmod u+x ./star-probe* && ./star-probe-v0.5.0-linux-x86_64 --urls=http://container.probe-b-star-iso.marathon.mesos:9000/status,http://container.probe-c-star-iso.marathon.mesos:9000/status,http://container.probe-d-star-iso.marathon.mesos:9000/status",
       "cpus": 0.1,
       "mem": 64.0,
@@ -15,7 +15,7 @@
     },
     {
       "id": "probe-b",
-      "uris": ["http://downloads.mesosphere.io/demo/star/v0.5.0/star-probe-v0.5.0-linux-x86_64"],
+      "uris": ["file:///star/star-probe-v0.5.0-linux-x86_64"],
       "cmd": "chmod u+x ./star-probe* && ./star-probe-v0.5.0-linux-x86_64 --urls=http://container.probe-a-star-iso.marathon.mesos:9000/status,http://container.probe-c-star-iso.marathon.mesos:9000/status,http://container.probe-d-star-iso.marathon.mesos:9000/status",
       "cpus": 0.1,
       "mem": 64.0,
@@ -27,7 +27,7 @@
     },
     {
       "id": "probe-c",
-      "uris": ["http://downloads.mesosphere.io/demo/star/v0.5.0/star-probe-v0.5.0-linux-x86_64"],
+      "uris": ["file:///star/star-probe-v0.5.0-linux-x86_64"],
       "cmd": "chmod u+x ./star-probe* && ./star-probe-v0.5.0-linux-x86_64 --urls=http://container.probe-a-star-iso.marathon.mesos:9000/status,http://container.probe-b-star-iso.marathon.mesos:9000/status,http://container.probe-d-star-iso.marathon.mesos:9000/status",
       "cpus": 0.1,
       "mem": 64.0,
@@ -39,7 +39,7 @@
     },
     {
       "id": "probe-d",
-      "uris": ["http://downloads.mesosphere.io/demo/star/v0.5.0/star-probe-v0.5.0-linux-x86_64"],
+      "uris": ["file:///star/star-probe-v0.5.0-linux-x86_64"],
       "cmd": "chmod u+x ./star-probe* && ./star-probe-v0.5.0-linux-x86_64 --urls=http://container.probe-a-star-iso.marathon.mesos:9000/status,http://container.probe-b-star-iso.marathon.mesos:9000/status,http://container.probe-c-star-iso.marathon.mesos:9000/status",
       "cpus": 0.1,
       "mem": 64.0,
@@ -52,8 +52,8 @@
     {
       "id": "collect",
       "uris": [
-        "http://downloads.mesosphere.io/demo/star/v0.5.0/star-collect-v0.5.0-linux-x86_64",
-        "http://downloads.mesosphere.io/demo/star/v0.5.0/star-iso-resources.json"
+        "file:///star/star-collect-v0.5.0-linux-x86_64",
+        "file:///star/star-iso-resources.json"
       ],
       "cmd": "chmod u+x ./star-collect* && ./star-collect-v0.5.0-linux-x86_64 --resources-file=star-iso-resources.json",
       "cpus": 0.2,
