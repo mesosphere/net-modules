@@ -61,6 +61,17 @@ RUN wget https://github.com/Metaswitch/calico-docker/releases/download/v0.5.1/ca
     chmod +x calicoctl && \
     mv calicoctl /usr/local/bin/
 
+#######################
+# Star (test workload)
+#######################
+WORKDIR /star
+
+RUN wget http://downloads.mesosphere.io/demo/star/v0.5.0/star-collect-v0.5.0-linux-x86_64
+RUN wget http://downloads.mesosphere.io/demo/star/v0.5.0/star-probe-v0.5.0-linux-x86_64
+
+COPY ./demo/marathon/star-resources.json /star/star-resources.json
+COPY ./demo/marathon/star-iso-resources.json /star/star-iso-resources.json
+
 ##################
 # Sample Flask App
 #################
