@@ -1,5 +1,7 @@
 # Mesos + Calico Demo
 
+[![Build Status](https://teamcity.mesosphere.io/guestAuth/app/rest/builds/buildType:(id:Oss_NetModules_Ci)/statusIcon)](https://teamcity.mesosphere.io/viewType.html?buildTypeId=Oss_NetModules_Ci&guest=1)
+
 This repository showcases Apache Mesos using Project Calico as the networking solution.
 
 To get started you will need either:
