@@ -35,14 +35,36 @@ Pre-load Docker images required for the demo
 
     cd metaswitch-modules/
     docker-compose pull
-    
+
 ## Build the demo (Vagrant and Linux)
 
 From the `metaswitch-modules` directory
 
     make images
 
-## Run the demo
+## Run the "before" demo
+
+This first demo shows what life is like with "vanilla" Mesos: port conflicts and no network isolation.
+
+    ./demo/launch-cluster-before.sh
+
+Wait until the cluster is up, then visit http://localhost:5050/
+
+You should see a working Mesos status page with no tasks and two slaves.
+
+Then
+
+    ./demo/launch-stars-before.sh
+
+Show the Mesos status page, and watch for the "collect" task to start.  Then visit http://localhost:9003/ to see the visualization.  You should see only two probes are running.
+
+Tear down the cluster for your next demo.
+
+    ./demo/stop-cluster.sh
+
+## Run the Calico w/o isolation demo
+
+This demo shows Calico without network isolation.  All probes can reach one another.
 
     ./demo/launch-cluster.sh
 
@@ -55,12 +77,21 @@ This brings up the test probes and targets with no isolation---everything can ta
   - Linux: http://192.168.255.253:9001/
   - Vagrant (from the host OS): http://localhost:9001/
 
-Next, tear down the non-isolated workloads.
-
-    ./demo/stop-starts.sh
-
 Bring up the test probes and targets with isolation.
 
     ./demo/launch-stars-isolated.sh
 
-Verify by refreshing the visualization page.
+Verify by visiting the visualization page.
+
+  - Linux: http://192.168.255.252:9002
+  - Vagrant (from the host OS): http://localhost:9002
+
+Tear down the test workloads.
+
+    ./demo/stop-stars.sh
+    ./demo/stop-stars-isolated.sh
+
+Or, alternatively simply tear down the cluster.
+
+    ./demo/stop-cluster.sh
+

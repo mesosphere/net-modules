@@ -12,6 +12,10 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
   config.vm.network "forwarded_port", guest: 9001, host: 9001
   config.vm.network "forwarded_port", guest: 9002, host: 9002
 
+  # This port is for the "before" part of the demo.  Docker will map it to 
+  # slave1 port 9001, where the collector starts in the "before" demo.
+  config.vm.network "forwarded_port", guest: 9003, host: 9003
+
   # Create a private network, which allows host-only access to the machine
   # using a specific IP.
   config.vm.network "private_network", ip: "10.141.141.10"
