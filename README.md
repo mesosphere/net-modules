@@ -16,7 +16,11 @@ Clone this repository.
 
     git clone https://github.com/mesosphere/metaswitch-modules.git
 
-Start the Vagrant VM.  This will automatically provision the VM.  Sit back and relax, it takes a few minutes to pre-load the Docker images used for the demo.
+Start the Vagrant VM.
+This will automatically provision the VM.
+Sit back and relax, it takes a few minutes to pre-load the Docker images used for the demo.
+
+    vagrant up
 
 ## Linux setup
 
@@ -37,7 +41,7 @@ Pre-load Docker images required for the demo
 
     cd metaswitch-modules/
     docker-compose pull
-    
+
 ## Build the demo (Vagrant and Linux)
 
 From the `metaswitch-modules` directory
@@ -46,23 +50,35 @@ From the `metaswitch-modules` directory
 
 ## Run the demo
 
+_Note: If using the Vagrant environment, these commands should be run
+from inside the virtual machine.  Run `vagrant ssh` to log in._
+
+Launch the demo cluster using docker-compose.
+This will bring up a single Mesos master and two slaves.
+
     ./demo/launch-cluster.sh
 
 Wait until the cluster is up.  Then
 
     ./demo/launch-stars.sh
 
-This brings up the test probes and targets with no isolation---everything can talk to everything else.  Verify by visiting the visualization page.
+This brings up the test probes and targets with no isolation---everything can talk to everything else.
+Verify by visiting the visualization page.
 
-  - Linux: http://192.168.255.253:9001/
-  - Vagrant (from the host OS): http://localhost:9001/
-
-Next, tear down the non-isolated workloads.
-
-    ./demo/stop-starts.sh
+  - Vagrant (from the host OS): http://localhost:9001
+  - Linux: http://192.168.255.253:9001
 
 Bring up the test probes and targets with isolation.
 
     ./demo/launch-stars-isolated.sh
 
-Verify by refreshing the visualization page.
+Verify by visiting the visualization page.
+
+  - Vagrant (from the host OS): http://localhost:9002
+  - Linux: http://192.168.255.253:9002
+
+Tear down the workloads.
+
+    ./demo/stop-stars.sh
+    ./demo/stop-stars-isolated.sh
+

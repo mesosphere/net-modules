@@ -95,9 +95,10 @@ SCRIPT
   config.vm.provision "docker" do |d|
     d.pull_images "mesosphere/mesos-modules-dev:latest"
     d.pull_images "mesosphere/mesos-modules-dev-phusion:latest"
-    d.pull_images "mesosphere/marathon:v0.9.1"
+    d.pull_images "mesosphere/marathon:v0.10.0"
     d.pull_images "jplock/zookeeper:3.4.5"
     d.pull_images "spikecurtis/single-etcd"
+    d.pull_images "progrium/consul:consul-0.4"
   end
 
 end
