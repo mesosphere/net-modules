@@ -72,6 +72,7 @@ RUN chmod +x star-collect-v0.5.0-linux-x86_64
 ADD http://downloads.mesosphere.io/demo/star/v0.5.0/star-probe-v0.5.0-linux-x86_64 /star/
 RUN chmod +x star-probe-v0.5.0-linux-x86_64
 
+COPY ./demo/marathon/star-resources-before.json /star/star-resources-before.json
 COPY ./demo/marathon/star-resources.json /star/star-resources.json
 COPY ./demo/marathon/star-iso-resources.json /star/star-iso-resources.json
 

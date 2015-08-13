@@ -29,7 +29,7 @@ def setup_logging(logfile):
     _log.setLevel(logging.DEBUG)
     formatter = logging.Formatter(
                 '%(asctime)s [%(levelname)s] %(name)s %(lineno)d: %(message)s')
-    handler = logging.StreamHandler(sys.stdout)
+    handler = logging.StreamHandler(sys.stderr)
     handler.setLevel(logging.INFO)
     handler.setFormatter(formatter)
     _log.addHandler(handler)
@@ -56,8 +56,11 @@ def assign_ipv4():
         assigner = SequentialAssignment()
         ip = assigner.allocate(pool)
         if ip is not None:
+            _log.info("Found free address %s in pool %s", ip, pool)
             ip = IPAddress(ip)
             break
+        else:
+            _log.error("Couldn't assign address in pool %s", pool)
     return ip
 
 
