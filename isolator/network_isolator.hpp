@@ -59,17 +59,22 @@ namespace mesos {
 
 struct Info
 {
-  Info(const Option<std::string>& _ipAddress,
-      const Option<std::string>& _profile)
+  Info(const std::string& _ipAddress,
+       const std::vector<std::string>& _netgroups,
+       const std::string& _uid)
     : ipAddress(_ipAddress),
-      profile(_profile) {}
+      netgroups(_netgroups),
+      uid(_uid) {}
 
   // The IP address to assign to the container, or NONE for auto-assignment.
-  const Option<std::string> ipAddress;
+  const std::string ipAddress;
 
   // The network profile name to assign to the container, or NONE for the
   // default.
-  const Option<std::string> profile;
+  const std::vector<std::string> netgroups;
+
+  // Unique identifier assigned to each IPAM IP request.
+  const std::string uid;
 };
 
 
@@ -85,7 +90,6 @@ public:
       const ContainerID& containerId,
       const ExecutorInfo& executorInfo,
       const std::string& directory,
-      const Option<std::string>& rootfs,
       const Option<std::string>& user);
 
   process::Future<Nothing> isolate(
@@ -97,13 +101,14 @@ public:
 
 private:
   CalicoIsolatorProcess(
-      const std::string& ipamPath_,
-      const Parameters& parameters_)
-    : ipamPath(ipamPath_),
-      parameters(parameters_) {}
+      const std::string& ipamClientPath_,
+      const std::string& isolatorClientPath_,
+      const Parameters& parameters_);
 
-  const std::string ipamPath;
+  const std::string ipamClientPath;
+  const std::string isolatorClientPath;
   const Parameters parameters;
+  std::string hostname;
 };
 
 
@@ -138,7 +143,6 @@ public:
       const ContainerID& containerId,
       const ExecutorInfo& executorInfo,
       const std::string& directory,
-      const Option<std::string>& rootfs,
       const Option<std::string>& user)
   {
     return dispatch(process.get(),
@@ -146,7 +150,6 @@ public:
                     containerId,
                     executorInfo,
                     directory,
-                    rootfs,
                     user);
   }
 

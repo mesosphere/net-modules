@@ -1,4 +1,4 @@
 .PHONEY: images
 
 images:
-	docker build -t mesosphere/slave .
+	docker build --no-cache -t mesosphere/slave .
