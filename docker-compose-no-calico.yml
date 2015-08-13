@@ -24,6 +24,7 @@ slave1:
   privileged: true
   ports:
     - "5051:5051"
+    - "9001:9001"
   links:
     - mesosmaster
     - zookeeper

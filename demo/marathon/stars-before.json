@@ -62,7 +62,8 @@
       "env": {
         "CALICO_IP": "192.168.255.253",
         "CALICO_PROFILE": "star,public"
-      }
+      },
+      "constraints": [["hostname", "LIKE", "slave1.service.consul"]]
     }
   ]
 }
