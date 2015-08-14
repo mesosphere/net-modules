@@ -59,9 +59,6 @@
       "cpus": 0.2,
       "mem": 64.0,
       "ports": [],
-      "constraints": [
-        ["hostname", "LIKE", "slave1.service.consul"]
-      ],
       "env": {
           "CALICO_IP": "192.168.255.252",
           "CALICO_PROFILE": "star-1,star-2,public"
