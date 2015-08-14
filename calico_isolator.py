@@ -111,7 +111,7 @@ def isolate(cpid, cont_id, ip_str, profile_str):
                                      veth_name="eth0",
                                      proc_alias="/proc")
 
-    if profile_str == "":
+    if profile_str == "" or profile_str.lower() == "none":
         profiles = ["public"]
     else:
         parts = profile_str.split(",")
