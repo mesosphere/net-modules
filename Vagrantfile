@@ -98,7 +98,7 @@ SCRIPT
     d.pull_images "mesosphere/marathon:v0.10.0"
     d.pull_images "jplock/zookeeper:3.4.5"
     d.pull_images "spikecurtis/single-etcd"
-    d.pull_images "progrium/consul:consul-0.4"
+    d.pull_images "progrium/consul"
   end
 
 end

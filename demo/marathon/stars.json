@@ -8,9 +8,9 @@
       "cpus": 0.1,
       "mem": 64.0,
       "ports": [],
-      "env": {
-        "CALICO_IP": "auto",
-        "CALICO_PROFILE": "star"
+      "labels": {
+        "MesosContainerizer.NetworkSettings.IPAddress": "auto",
+        "network_isolator.netgroups": "star"
       }
     },
     {
@@ -20,9 +20,9 @@
       "cpus": 0.1,
       "mem": 64.0,
       "ports": [],
-      "env": {
-        "CALICO_IP": "auto",
-        "CALICO_PROFILE": "star"
+      "labels": {
+        "MesosContainerizer.NetworkSettings.IPAddress": "auto",
+        "network_isolator.netgroups": "star"
       }
     },
     {
@@ -32,9 +32,9 @@
       "cpus": 0.1,
       "mem": 64.0,
       "ports": [],
-      "env": {
-        "CALICO_IP": "auto",
-        "CALICO_PROFILE": "star"
+      "labels": {
+        "MesosContainerizer.NetworkSettings.IPAddress": "auto",
+        "network_isolator.netgroups": "star"
       }
     },
     {
@@ -44,9 +44,9 @@
       "cpus": 0.1,
       "mem": 64.0,
       "ports": [],
-      "env": {
-        "CALICO_IP": "auto",
-        "CALICO_PROFILE": "star"
+      "labels": {
+        "MesosContainerizer.NetworkSettings.IPAddress": "auto",
+        "network_isolator.netgroups": "star"
       }
     },
     {
@@ -59,9 +59,9 @@
       "cpus": 0.2,
       "mem": 64.0,
       "ports": [],
-      "env": {
-        "CALICO_IP": "192.168.255.253",
-        "CALICO_PROFILE": "star,public"
+      "labels": {
+        "MesosContainerizer.NetworkSettings.IPAddress": "192.168.255.253",
+        "network_isolator.netgroups": "star,public"
       }
     }
   ]

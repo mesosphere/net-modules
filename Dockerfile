@@ -1,4 +1,4 @@
-FROM mesosphere/mesos-modules-dev-phusion
+FROM mesosphere/mesos-modules-dev-phusion:6c4fa12
 MAINTAINER Spike Curtis <spike@projectcalico.org>
 
 ####################
@@ -10,7 +10,6 @@ RUN wget https://dl.dropboxusercontent.com/u/4550074/mesos/mesos-dns -O /usr/bin
 ####################
 # Isolator
 ####################
-
 ADD ./isolator /isolator/isolator/
 ADD ./m4 /isolator/m4/
 ADD ./bootstrap /isolator/
