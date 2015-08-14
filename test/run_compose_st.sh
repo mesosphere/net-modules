@@ -19,7 +19,7 @@ docker exec modules_slave1_1 ping -c 4 `python get_ip_on_app.py slave1`
 docker exec modules_slave2_1 ping -c 4 `python get_ip_on_app.py slave2`
 
 # Slave1 should be able to ping the hostname of the app running on it
-docker exec modules_slave1_1 ping -c 4 container.`python get_app_on_slave.py slave1`.marathon.mesos
+docker exec modules_slave1_1 ping -c 4 `python get_app_on_slave.py slave1`.marathon.mesos
 
 # Slave2 should be able to ping the hostname of the app running on it
-docker exec modules_slave2_1 ping -c 4 container.`python get_app_on_slave.py slave2`.marathon.mesos
+docker exec modules_slave2_1 ping -c 4 `python get_app_on_slave.py slave2`.marathon.mesos

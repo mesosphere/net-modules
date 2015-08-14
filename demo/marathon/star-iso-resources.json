@@ -1,18 +1,18 @@
 [
   {
     "id": "A",
-    "url": "http://container.probe-a-star-iso.marathon.mesos:9000/status"
+    "url": "http://probe-a-star-iso.marathon.mesos:9000/status"
   },
   {
     "id": "B",
-    "url": "http://container.probe-b-star-iso.marathon.mesos:9000/status"
+    "url": "http://probe-b-star-iso.marathon.mesos:9000/status"
   },
   {
     "id": "C",
-    "url": "http://container.probe-c-star-iso.marathon.mesos:9000/status"
+    "url": "http://probe-c-star-iso.marathon.mesos:9000/status"
   },
   {
     "id": "D",
-    "url": "http://container.probe-d-star-iso.marathon.mesos:9000/status"
+    "url": "http://probe-d-star-iso.marathon.mesos:9000/status"
   }
 ]

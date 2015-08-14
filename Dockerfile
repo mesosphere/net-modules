@@ -4,7 +4,7 @@ MAINTAINER Spike Curtis <spike@projectcalico.org>
 ####################
 # Mesos-DNS
 ####################
-RUN wget https://dl.dropboxusercontent.com/u/4550074/mesos/mesos-dns -O /usr/bin/mesos-dns && \
+RUN wget https://dl.dropboxusercontent.com/u/4550074/mesos/mesos-dns+50fc45a9 -O /usr/bin/mesos-dns && \
     chmod +x /usr/bin/mesos-dns
 
 ####################
