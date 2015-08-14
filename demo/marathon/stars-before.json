@@ -8,11 +8,7 @@
       "cpus": 0.1,
       "mem": 64.0,
       "ports": [9000],
-      "requirePorts": true,
-      "env": {
-        "CALICO_IP": "auto",
-        "CALICO_PROFILE": "star"
-      }
+      "requirePorts": true
     },
     {
       "id": "probe-b",
@@ -21,11 +17,7 @@
       "cpus": 0.1,
       "mem": 64.0,
       "ports": [9000],
-      "requirePorts": true,
-      "env": {
-        "CALICO_IP": "auto",
-        "CALICO_PROFILE": "star"
-      }
+      "requirePorts": true
     },
     {
       "id": "probe-c",
@@ -34,11 +26,7 @@
       "cpus": 0.1,
       "mem": 64.0,
       "ports": [9000],
-      "requirePorts": true,
-      "env": {
-        "CALICO_IP": "auto",
-        "CALICO_PROFILE": "star"
-      }
+      "requirePorts": true
     },
     {
       "id": "probe-d",
@@ -47,11 +35,7 @@
       "cpus": 0.1,
       "mem": 64.0,
       "ports": [9000],
-      "requirePorts": true,
-      "env": {
-        "CALICO_IP": "auto",
-        "CALICO_PROFILE": "star"
-      }
+      "requirePorts": true
     },
     {
       "id": "collect",
@@ -66,11 +50,7 @@
       "requirePorts": true,
       "constraints": [
         ["hostname", "LIKE", "slave1.service.consul"]
-      ],
-      "env": {
-        "CALICO_IP": "192.168.255.253",
-        "CALICO_PROFILE": "star,public"
-      }
+      ]
     }
   ]
 }
