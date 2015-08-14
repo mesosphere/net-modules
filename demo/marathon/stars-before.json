@@ -7,7 +7,8 @@
       "cmd": "chmod u+x ./star-probe* && ./star-probe-v0.5.0-linux-x86_64 --urls=http://probe-b-star-before.marathon.mesos:9000/status,http://probe-c-star-before.marathon.mesos:9000/status,http://probe-d-star-before.marathon.mesos:9000/status",
       "cpus": 0.1,
       "mem": 64.0,
-      "ports": [],
+      "ports": [9000],
+      "requirePorts": true,
       "env": {
         "CALICO_IP": "auto",
         "CALICO_PROFILE": "star"
@@ -19,7 +20,8 @@
       "cmd": "chmod u+x ./star-probe* && ./star-probe-v0.5.0-linux-x86_64 --urls=http://probe-a-star-before.marathon.mesos:9000/status,http://probe-c-star-before.marathon.mesos:9000/status,http://probe-d-star-before.marathon.mesos:9000/status",
       "cpus": 0.1,
       "mem": 64.0,
-      "ports": [],
+      "ports": [9000],
+      "requirePorts": true,
       "env": {
         "CALICO_IP": "auto",
         "CALICO_PROFILE": "star"
@@ -31,7 +33,8 @@
       "cmd": "chmod u+x ./star-probe* && ./star-probe-v0.5.0-linux-x86_64 --urls=http://probe-a-star-before.marathon.mesos:9000/status,http://probe-b-star-before.marathon.mesos:9000/status,http://probe-d-star-before.marathon.mesos:9000/status",
       "cpus": 0.1,
       "mem": 64.0,
-      "ports": [],
+      "ports": [9000],
+      "requirePorts": true,
       "env": {
         "CALICO_IP": "auto",
         "CALICO_PROFILE": "star"
@@ -43,7 +46,8 @@
       "cmd": "chmod u+x ./star-probe* && ./star-probe-v0.5.0-linux-x86_64 --urls=http://probe-a-star-before.marathon.mesos:9000/status,http://probe-b-star-before.marathon.mesos:9000/status,http://probe-c-star-before.marathon.mesos:9000/status",
       "cpus": 0.1,
       "mem": 64.0,
-      "ports": [],
+      "ports": [9000],
+      "requirePorts": true,
       "env": {
         "CALICO_IP": "auto",
         "CALICO_PROFILE": "star"
@@ -58,12 +62,15 @@
       "cmd": "chmod u+x ./star-collect* && ./star-collect-v0.5.0-linux-x86_64 --resources-file=star-resources-before.json",
       "cpus": 0.2,
       "mem": 64.0,
-      "ports": [],
+      "ports": [9001],
+      "requirePorts": true,
+      "constraints": [
+        ["hostname", "LIKE", "slave1.service.consul"]
+      ],
       "env": {
         "CALICO_IP": "192.168.255.253",
         "CALICO_PROFILE": "star,public"
-      },
-      "constraints": [["hostname", "LIKE", "slave1.service.consul"]]
+      }
     }
   ]
 }
