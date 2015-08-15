@@ -29,7 +29,7 @@ Load Kernel modules used by Project Calico:
 
 Clone this repository.
 
-    git clone https://github.com/mesosphere/metaswitch-modules.git
+    git clone https://github.com/mesosphere/net-modules.git
 
 Pre-load Docker images required for the demo
 
