@@ -54,7 +54,7 @@ You should see a working Mesos status page with no tasks and two slaves.
 
 Then
 
-    ./demo/launch-stars-before.sh
+    ./demo/launch-probes-before.sh
 
 Show the Mesos status page, and watch for the "collect" task to start.  Then visit http://localhost:9003/ to see the visualization.  You should see only two probes are running.
 
@@ -70,7 +70,7 @@ This demo shows Calico without network isolation.  All probes can reach one anot
 
 Wait until the cluster is up.  Then
 
-    ./demo/launch-stars.sh
+    ./demo/launch-probes.sh
 
 This brings up the test probes and targets with no isolation---everything can talk to everything else.  Verify by visiting the visualization page.
 
@@ -79,7 +79,7 @@ This brings up the test probes and targets with no isolation---everything can ta
 
 Bring up the test probes and targets with isolation.
 
-    ./demo/launch-stars-isolated.sh
+    ./demo/launch-probes-isolated.sh
 
 Verify by visiting the visualization page.
 
@@ -88,8 +88,8 @@ Verify by visiting the visualization page.
 
 Tear down the test workloads.
 
-    ./demo/stop-stars.sh
-    ./demo/stop-stars-isolated.sh
+    ./demo/stop-probes.sh
+    ./demo/stop-probes-isolated.sh
 
 Or, alternatively simply tear down the cluster.
 
