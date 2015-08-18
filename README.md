@@ -16,6 +16,10 @@ Clone this repository.
 
 Start the Vagrant VM.  This will automatically provision the VM.  Sit back and relax, it takes a few minutes to pre-load the Docker images used for the demo.
 
+    vagrant up
+
+_Note: the shell provision step contains steps that must be performed each time the VM is booted.  Append the `--provision-with shell` flag when running `vagrant up` or `vagrant reload`._
+
 ## Linux setup
 
 Install Docker: https://docs.docker.com/installation/
