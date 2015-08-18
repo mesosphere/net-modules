@@ -8,11 +8,15 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
   # Every Vagrant virtual environment requires a box to build off of.
   config.vm.box     = "ubuntu/trusty64"
 
+  # Mesos and Marathon UI ports.
+  config.vm.network "forwarded_port", guest: 5050, host: 5050
+  config.vm.network "forwarded_port", guest: 8080, host: 8080
+
   # Visualizer tasks use these ports.
   config.vm.network "forwarded_port", guest: 9001, host: 9001
   config.vm.network "forwarded_port", guest: 9002, host: 9002
 
-  # This port is for the "before" part of the demo.  Docker will map it to 
+  # This port is for the "before" part of the demo.  Docker will map it to
   # slave1 port 9001, where the collector starts in the "before" demo.
   config.vm.network "forwarded_port", guest: 9003, host: 9003
 
