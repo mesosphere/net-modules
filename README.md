@@ -31,14 +31,9 @@ Clone this repository.
 
     git clone https://github.com/mesosphere/net-modules.git
 
-Pre-load Docker images required for the demo
-
-    cd metaswitch-modules/
-    docker-compose pull
-
 ## Build the demo (Vagrant and Linux)
 
-From the `metaswitch-modules` directory
+From the `net-modules` directory
 
     make images
 
@@ -94,4 +89,3 @@ Tear down the test workloads.
 Or, alternatively simply tear down the cluster.
 
     ./demo/stop-cluster.sh
-
