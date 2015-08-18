@@ -60,7 +60,7 @@ Show the Mesos status page, and watch for the "collect" task to start.  Then vis
 
 Tear down the cluster for your next demo.
 
-    ./demo/stop-cluster.sh
+    ./demo/stop-cluster-before.sh
 
 ## Run the Calico w/o isolation demo
 
