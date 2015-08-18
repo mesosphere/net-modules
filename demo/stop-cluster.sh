@@ -9,7 +9,7 @@ echo "Shutting down cluster..."
 
 cd $PROJECT_DIR
 docker-compose kill
-docker-compose rm
+docker-compose rm --force
 
 echo ""
 echo "Done."

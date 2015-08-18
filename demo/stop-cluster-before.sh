@@ -8,7 +8,7 @@ echo "Shutting down cluster..."
 
 pushd $DEMO_DIR/before
 docker-compose -p netmodules kill
-docker-compose -p netmodules  rm
+docker-compose -p netmodules  rm --force
 popd
 
 echo ""

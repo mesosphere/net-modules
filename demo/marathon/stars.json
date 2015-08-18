@@ -57,7 +57,10 @@
       "ports": [],
       "env": {
         "CALICO_IP": "192.168.255.253"
-      }
+      },
+      "constraints": [
+        ["public", "LIKE", "true"]
+      ]
     }
   ]
 }

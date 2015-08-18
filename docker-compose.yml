@@ -40,6 +40,7 @@ slave1:
     - MESOS_ISOLATION=com_mesosphere_mesos_CalicoIsolator
     - MESOS_HOOKS=com_mesosphere_mesos_CalicoHook
     - ETCD_AUTHORITY=etcd:4001
+    - MESOS_ATTRIBUTES=public:true
   dns:
    - 192.168.255.254
 
