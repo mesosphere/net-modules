@@ -21,6 +21,10 @@ Start the Vagrant VM.  This will automatically provision the VM.  Sit back and r
 
 _Note: the shell provision step contains steps that must be performed each time the VM is booted.  Append the `--provision-with shell` flag when running `vagrant up` or `vagrant reload` when booting the VM subsequent times._
 
+The commands below should all be run from inside the virtual machine.  Logging in is easy:
+
+    vagrant ssh
+
 ## Linux setup
 
 Install Docker: https://docs.docker.com/installation/
