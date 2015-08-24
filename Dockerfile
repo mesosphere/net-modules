@@ -18,7 +18,7 @@ ADD ./calico_isolator /isolator/
 ADD ./configure.ac /isolator/
 ADD ./Makefile.am /isolator/
 ADD ./requirements.txt /isolator/
-ADD http://downloads.mesosphere.io/demo/calico-node/v0.5.1/calico-node-v0.5.1.tar /isolator/
+COPY ./calico-node-v0.5.4.tar /isolator/
 
 WORKDIR /isolator
 
