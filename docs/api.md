@@ -34,10 +34,10 @@ process.)
 ## IPAM Plug-In API
 
 The IPAM plug-in ensures that containers receive unique IP addresses.  The
-Network Isolator Module `allocate`s IPs when it needs them for new containers,
-and `release`s them when it deems it has too many.  The Network Isolator Module
-may pre-allocate more addresses than actually running containers to improve
-start up times for new containers.
+Network Isolator Module will `allocate` IPs when it needs them for new
+containers, and will `release` them when it deems it has too many.  The Network
+Isolator Module may pre-allocate more addresses than actually running
+containers to improve start up times for new containers.
 
 The module passes a UID to the IPAM API each time it requests addresses.  The
 IPAM API will support a “release all” action scoped to a UID.
@@ -112,6 +112,11 @@ namespace for the executor.  The Network Virtualizer Plug-in may access it
 using the PID passed as an argument.
 
 ### JSON Format
+
+The client writes a JSON blob to the stdin of the Network Virtualizer binary in
+the following format:
+
+    {"command": <command>, "args": <dictionary of arguments>}<EOF>
 
 #### Isolate
     # Request
