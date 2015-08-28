@@ -12,11 +12,11 @@ Download and install VirtualBox and Vagrant.
 
 Clone this repository.
 
-    git clone https://github.com/mesosphere/metaswitch-modules.git
+    git clone https://github.com/mesosphere/net-modules.git
 
 Start the Vagrant VM.  This will automatically provision the VM.  Sit back and relax, it takes a few minutes to pre-load the Docker images used for the demo.
 
-    cd metaswitch-modules
+    cd net-modules
     vagrant up
 
 _Note: the shell provision step contains steps that must be performed each time the VM is booted.  Append the `--provision-with shell` flag when running `vagrant up` or `vagrant reload` when booting the VM subsequent times._
