@@ -1,6 +1,6 @@
-# Mesos + Calico Demo
+# Network isolation modules for [Apache Mesos](http://mesos.apache.org)
 
-This repository showcases Apache Mesos using Project Calico as the networking solution.
+The first implementation in this repository showcases Apache Mesos using Project Calico as the networking solution.
 
 To get started you will need either:
   - a Linux computer running a modern distribution
