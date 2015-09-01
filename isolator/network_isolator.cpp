@@ -105,7 +105,22 @@ static Try<OutProto> runCommand(const string& path, const InProto& command)
 
   LOG(INFO) << "Sending command to " + path + ": " << jsonCommand;
   process::io::write(child.get().in().get(), jsonCommand);
-  os::close(child.get().in().get());
+
+  {
+    // Temporary hack until Subprocess supports closing stdin.
+    // We open /dev/null on fd and dup it over to child's stdin, effectively
+    // closing the existing pipe on stdin. We then close the original fd and
+    // continue with our business. Child's stdin/out/err are closed in its
+    // destructor.
+    // TODO(kapil): Replace this block with child.get().closeIn() or
+    // equivalient.
+    Try<int> fd = os::open("/dev/null", O_WRONLY);
+    if (fd.isError()) {
+      return Error("Error opening /dev/null:" + fd.error());
+    }
+    ::dup2(fd.get(), child.get().in().get());
+    os::close(fd.get());
+  }
 
   waitpid(child.get().pid(), NULL, 0);
   string output = process::io::read(child.get().out().get()).get();
