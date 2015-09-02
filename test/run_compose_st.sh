@@ -1,5 +1,5 @@
 #!/bin/bash
-docker-compose -p modules up -d
+docker-compose -p netmodules up -d
 cd `dirname $0`
 
 # Wait for the marathon container to come up
@@ -12,14 +12,8 @@ sleep 90
 
 curl -o state.json localhost:5050/master/state.json
 
-# Make sure slave1 can ping the IP of the app running on it
-docker exec modules_slave1_1 ping -c 4 `python get_ip_on_app.py slave1`
+docker exec netmodules_slave1_1 ping -c 4 192.168.0.0
+docker exec netmodules_slave1_1 ping -c 4 192.168.1.0
 
-# Make sure slave2 can ping the IP of the app running on it
-docker exec modules_slave2_1 ping -c 4 `python get_ip_on_app.py slave2`
-
-# Slave1 should be able to ping the hostname of the app running on it
-docker exec modules_slave1_1 ping -c 4 `python get_app_on_slave.py slave1`.marathon.mesos
-
-# Slave2 should be able to ping the hostname of the app running on it
-docker exec modules_slave2_1 ping -c 4 `python get_app_on_slave.py slave2`.marathon.mesos
+docker exec netmodules_slave2_1 ping -c 4 192.168.0.0
+docker exec netmodules_slave2_1 ping -c 4 192.168.1.0
