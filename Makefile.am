@@ -72,6 +72,6 @@ CLEANFILES += $(CXX_PROTOS)
 	$(PROTOC) $(PROTOCFLAGS) --cpp_out=isolator/. $^
 
 # Library containing kerberos ticket forwarding module.
-pkglib_LTLIBRARIES += libcalico_isolator.la
-libcalico_isolator_la_SOURCES = isolator/network_isolator.cpp ${CXX_PROTOS}
-libcalico_isolator_la_LDFLAGS = -release $(PACKAGE_VERSION) -shared $(MESOS_LDFLAGS)
+pkglib_LTLIBRARIES += libmesos_network_isolator.la
+libmesos_network_isolator_la_SOURCES = isolator/network_isolator.cpp ${CXX_PROTOS}
+libmesos_network_isolator_la_LDFLAGS = -release $(PACKAGE_VERSION) -shared $(MESOS_LDFLAGS)

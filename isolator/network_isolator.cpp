@@ -152,7 +152,7 @@ static Try<OutProto> runCommand(const string& path, const InProto& command)
 }
 
 
-Try<Isolator*> CalicoIsolatorProcess::create(const Parameters& parameters)
+Try<Isolator*> NetworkIsolatorProcess::create(const Parameters& parameters)
 {
   string ipamClientPath;
   string isolatorClientPath;
@@ -167,13 +167,13 @@ Try<Isolator*> CalicoIsolatorProcess::create(const Parameters& parameters)
     LOG(WARNING) << "IPAM path not specified";
     return Error("IPAM path not specified.");
   }
-  return new CalicoIsolator(process::Owned<CalicoIsolatorProcess>(
-      new CalicoIsolatorProcess(
+  return new NetworkIsolator(process::Owned<NetworkIsolatorProcess>(
+      new NetworkIsolatorProcess(
           ipamClientPath, isolatorClientPath, parameters)));
 }
 
 
-CalicoIsolatorProcess::CalicoIsolatorProcess(
+NetworkIsolatorProcess::NetworkIsolatorProcess(
     const std::string& ipamClientPath_,
     const std::string& isolatorClientPath_,
     const Parameters& parameters_)
@@ -189,13 +189,13 @@ CalicoIsolatorProcess::CalicoIsolatorProcess(
 }
 
 
-process::Future<Option<ContainerPrepareInfo>> CalicoIsolatorProcess::prepare(
+process::Future<Option<ContainerPrepareInfo>> NetworkIsolatorProcess::prepare(
     const ContainerID& containerId,
     const ExecutorInfo& executorInfo,
     const std::string& directory,
     const Option<std::string>& user)
 {
-  LOG(INFO) << "CalicoIsolator::prepare for container: " << containerId;
+  LOG(INFO) << "NetworkIsolator::prepare for container: " << containerId;
 
   if (!executorNetgroups->contains(executorInfo.executor_id())) {
     return Failure(
@@ -247,7 +247,7 @@ process::Future<Option<ContainerPrepareInfo>> CalicoIsolatorProcess::prepare(
 }
 
 
-process::Future<Nothing> CalicoIsolatorProcess::isolate(
+process::Future<Nothing> NetworkIsolatorProcess::isolate(
     const ContainerID& containerId,
     pid_t pid)
 {
@@ -279,7 +279,7 @@ process::Future<Nothing> CalicoIsolatorProcess::isolate(
 }
 
 
-process::Future<Nothing> CalicoIsolatorProcess::cleanup(
+process::Future<Nothing> NetworkIsolatorProcess::cleanup(
     const ContainerID& containerId)
 {
   if (!infos->contains(containerId)) {
@@ -314,9 +314,9 @@ process::Future<Nothing> CalicoIsolatorProcess::cleanup(
 }
 
 
-static Isolator* createCalicoIsolator(const Parameters& parameters)
+static Isolator* createNetworkIsolator(const Parameters& parameters)
 {
-  LOG(INFO) << "Loading Calico Isolator module";
+  LOG(INFO) << "Loading Network Isolator module";
 
   if (infos == NULL) {
     infos = new hashmap<ContainerID, Info*>();
@@ -326,7 +326,7 @@ static Isolator* createCalicoIsolator(const Parameters& parameters)
     executorNetgroups = new hashmap<ExecutorID, string>();
   }
 
-  Try<Isolator*> result = CalicoIsolatorProcess::create(parameters);
+  Try<Isolator*> result = NetworkIsolatorProcess::create(parameters);
 
   if (result.isError()) {
     return NULL;
@@ -337,7 +337,7 @@ static Isolator* createCalicoIsolator(const Parameters& parameters)
 
 
 // TODO(karya): Use the hooks for Task Status labels.
-class CalicoHook : public Hook
+class NetworkHook : public Hook
 {
 public:
   virtual Result<Labels> slaveRunTaskLabelDecorator(
@@ -346,7 +346,7 @@ public:
       const FrameworkInfo& frameworkInfo,
       const SlaveInfo& slaveInfo)
   {
-    LOG(INFO) << "CalicoHook:: run task label decorator";
+    LOG(INFO) << "NetworkHook:: run task label decorator";
     if (taskInfo.has_labels()) {
       foreach (const Label& label, taskInfo.labels().labels()) {
         if (label.key() == netgroupsLabelKey) {
@@ -362,22 +362,22 @@ public:
       const FrameworkID& frameworkId,
       const TaskStatus& status)
   {
-    LOG(INFO) << "CalicoHook::task status label decorator";
+    LOG(INFO) << "NetworkHook::task status label decorator";
 
     if (!status.has_executor_id()) {
-      LOG(WARNING) << "CalicoHook:: task status has no valid executor id";
+      LOG(WARNING) << "NetworkHook:: task status has no valid executor id";
       return None();
     }
 
     const ExecutorID executorId = status.executor_id();
     if (!executorContainerIds->contains(executorId)) {
-      LOG(WARNING) << "CalicoHook:: no valid container id for: " << executorId;
+      LOG(WARNING) << "NetworkHook:: no valid container id for: " << executorId;
       return None();
     }
 
     const ContainerID containerId = executorContainerIds->at(executorId);
     if (infos == NULL || !infos->contains(containerId)) {
-      LOG(WARNING) << "CalicoHook:: no valid infos for: " << containerId;
+      LOG(WARNING) << "NetworkHook:: no valid infos for: " << containerId;
       return None();
     }
 
@@ -393,37 +393,37 @@ public:
     label->set_key(ipAddressLabelKey);
     label->set_value(info->ipAddress);
 
-    LOG(INFO) << "CalicoHook:: added label "
+    LOG(INFO) << "NetworkHook:: added label "
               << label->key() << ":" << label->value();
     return labels;
   }
 };
 
 
-static Hook* createCalicoHook(const Parameters& parameters)
+static Hook* createNetworkHook(const Parameters& parameters)
 {
-  return new CalicoHook();
+  return new NetworkHook();
 }
 
 
-// Declares the Calico isolator named
-// 'org_apache_mesos_CalicoIsolator'.
-mesos::modules::Module<Isolator> com_mesosphere_mesos_CalicoIsolator(
+// Declares the Network isolator named
+// 'org_apache_mesos_NetworkIsolator'.
+mesos::modules::Module<Isolator> com_mesosphere_mesos_NetworkIsolator(
     MESOS_MODULE_API_VERSION,
     MESOS_VERSION,
     "Mesosphere",
     "support@mesosphere.com",
-    "Calico Isolator module.",
+    "Network Isolator module.",
     NULL,
-    createCalicoIsolator);
+    createNetworkIsolator);
 
 
-// Declares the Calico hook module 'org_apache_mesos_CalicoHook'.
-mesos::modules::Module<Hook> com_mesosphere_mesos_CalicoHook(
+// Declares the Network hook module 'org_apache_mesos_NetworkHook'.
+mesos::modules::Module<Hook> com_mesosphere_mesos_NetworkHook(
     MESOS_MODULE_API_VERSION,
     MESOS_VERSION,
     "Mesosphere",
     "support@mesosphere.com",
-    "Calico Hook module.",
+    "Network Hook module.",
     NULL,
-    createCalicoHook);
+    createNetworkHook);

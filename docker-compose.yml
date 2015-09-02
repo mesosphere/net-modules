@@ -37,8 +37,8 @@ slave1:
     - MESOS_LOG_DIR=/var/log
     - MESOS_RESOURCES=ports(*):[31000-31100]
     - MESOS_MODULES=file:///isolator/build/isolator/modules.json
-    - MESOS_ISOLATION=com_mesosphere_mesos_CalicoIsolator
-    - MESOS_HOOKS=com_mesosphere_mesos_CalicoHook
+    - MESOS_ISOLATION=com_mesosphere_mesos_NetworkIsolator
+    - MESOS_HOOKS=com_mesosphere_mesos_NetworkHook
     - ETCD_AUTHORITY=etcd:4001
   dns:
    - 192.168.255.254
@@ -62,8 +62,8 @@ slave2:
     - MESOS_LOG_DIR=/var/log
     - MESOS_RESOURCES=ports(*):[31000-31100]
     - MESOS_MODULES=file:///isolator/build/isolator/modules.json
-    - MESOS_ISOLATION=com_mesosphere_mesos_CalicoIsolator
-    - MESOS_HOOKS=com_mesosphere_mesos_CalicoHook
+    - MESOS_ISOLATION=com_mesosphere_mesos_NetworkIsolator
+    - MESOS_HOOKS=com_mesosphere_mesos_NetworkHook
     - ETCD_AUTHORITY=etcd:4001
     - MESOS_ATTRIBUTES=public:true
   dns:

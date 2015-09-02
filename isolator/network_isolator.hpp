@@ -78,13 +78,13 @@ struct Info
 };
 
 
-class CalicoIsolatorProcess : public process::Process<CalicoIsolatorProcess>
+class NetworkIsolatorProcess : public process::Process<NetworkIsolatorProcess>
 {
 public:
   static Try<mesos::slave::Isolator*> create(
       const Parameters& parameters);
 
-  ~CalicoIsolatorProcess() {}
+  ~NetworkIsolatorProcess() {}
 
   process::Future<Option<mesos::slave::ContainerPrepareInfo>> prepare(
       const ContainerID& containerId,
@@ -100,7 +100,7 @@ public:
       const ContainerID& containerId);
 
 private:
-  CalicoIsolatorProcess(
+  NetworkIsolatorProcess(
       const std::string& ipamClientPath_,
       const std::string& isolatorClientPath_,
       const Parameters& parameters_);
@@ -112,16 +112,16 @@ private:
 };
 
 
-class CalicoIsolator : public mesos::slave::Isolator
+class NetworkIsolator : public mesos::slave::Isolator
 {
 public:
-  CalicoIsolator(process::Owned<CalicoIsolatorProcess> process_)
+  NetworkIsolator(process::Owned<NetworkIsolatorProcess> process_)
     : process(process_)
   {
     spawn(CHECK_NOTNULL(process.get()));
   }
 
-  virtual ~CalicoIsolator()
+  virtual ~NetworkIsolator()
   {
     terminate(process.get());
     wait(process.get());
@@ -146,7 +146,7 @@ public:
       const Option<std::string>& user)
   {
     return dispatch(process.get(),
-                    &CalicoIsolatorProcess::prepare,
+                    &NetworkIsolatorProcess::prepare,
                     containerId,
                     executorInfo,
                     directory,
@@ -158,7 +158,7 @@ public:
       pid_t pid)
   {
     return dispatch(process.get(),
-                    &CalicoIsolatorProcess::isolate,
+                    &NetworkIsolatorProcess::isolate,
                     containerId,
                     pid);
   }
@@ -186,12 +186,12 @@ public:
       const ContainerID& containerId)
   {
     return dispatch(process.get(),
-                    &CalicoIsolatorProcess::cleanup,
+                    &NetworkIsolatorProcess::cleanup,
                     containerId);
   }
 
 private:
-  process::Owned<CalicoIsolatorProcess> process;
+  process::Owned<NetworkIsolatorProcess> process;
   const Parameters parameters;
 };
 

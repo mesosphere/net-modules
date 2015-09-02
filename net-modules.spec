@@ -39,13 +39,13 @@
 # damages or losses), even if Mesosphere has been advised of the
 # possibility of such damages.
 
-Name:           metaswitch-modules
+Name:           net-modules
 Version:        0.1
 Release:        0%{?dist}
 License:        Mesosphere
-Summary:        Network isolator module for Calico
-Url:            https://github.com/mesosphere/metaswitch-modules
-Source0:        metaswitch-modules-0.1.tar.gz
+Summary:        Network isolator module
+Url:            https://github.com/mesosphere/net-modules
+Source0:        net-modules-0.1.tar.gz
 
 # This package is functional only on i386 and x86_64 architectures.
 ExclusiveArch:	%ix86 x86_64
