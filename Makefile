@@ -17,7 +17,7 @@ calico-node-$(CALICO_NODE_VERSION).tar:
 	docker save -o calico-node-$(CALICO_NODE_VERSION).tar calico/node:$(CALICO_NODE_VERSION)
 
 st: images
-	for container in netmodules_marathon_1 netmodules_mesosmaster_1 netmodules_zookeeper_1 netmodules_etcd_1 netmodules_slave1_1 netmodules_slave2_1 ; do \
+	for container in netmodules_marathon_1 netmodules_mesosmaster_1 netmodules_zookeeper_1 netmodules_etcd_1 netmodules_slave_1 netmodules_slave_2 ; do \
 		docker rm -f $$container; true; \
 	done
 	test/run_compose_st.sh
