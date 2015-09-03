@@ -58,7 +58,7 @@ VOLUME /var/lib/docker
 ###################
 # Calico
 ###################
-RUN wget https://github.com/Metaswitch/calico-docker/releases/download/v0.5.4/calicoctl && \
+RUN wget https://github.com/projectcalico/calico-docker/releases/download/v0.5.4/calicoctl && \
     chmod +x calicoctl && \
     mv calicoctl /usr/local/bin/
 

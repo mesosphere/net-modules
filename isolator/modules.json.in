@@ -1,10 +1,10 @@
 {
   "libraries": [
     {
-      "file": "@abs_top_builddir@/.libs/libcalico_isolator.@LIB_EXT@",
+      "file": "@abs_top_builddir@/.libs/libmesos_network_isolator.@LIB_EXT@",
       "modules": [
         {
-          "name": "com_mesosphere_mesos_CalicoIsolator",
+          "name": "com_mesosphere_mesos_NetworkIsolator",
           "parameters": [
             {
               "key": "isolator_command",
@@ -17,7 +17,7 @@
           ]
         },
         {
-          "name": "com_mesosphere_mesos_CalicoHook"
+          "name": "com_mesosphere_mesos_NetworkHook"
         }
       ]
     }
