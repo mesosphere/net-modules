@@ -1,2 +1,2 @@
 netaddr
-git+https://github.com/metaswitch/calico-docker.git@v0.5.1
+git+https://github.com/projectcalico/calico-docker.git@v0.5.1
