@@ -28,7 +28,7 @@ message IPAMReserveIPMessage {
     optional mesos.Labels labels = 6;
   }
 
-  required string command = 1 [default = "allocate"];
+  required string command = 1 [default = "reserve"];
   required Args args = 2;
 }
 
