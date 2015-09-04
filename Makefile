@@ -1,8 +1,14 @@
 CALICO_NODE_VERSION=v0.5.4
+DOCKER_COMPOSE_URL=https://github.com/docker/compose/releases/download/1.4.0/docker-compose-`uname -s`-`uname -m`
 
+default: images
 
-images: calico-node
-	docker-compose build
+docker-compose:
+	  curl -L ${DOCKER_COMPOSE_URL} > docker-compose
+	  chmod +x ./docker-compose
+
+images: calico-node docker-compose
+	  ./docker-compose build;
 
 calico-node: calico-node-$(CALICO_NODE_VERSION).tar
 
