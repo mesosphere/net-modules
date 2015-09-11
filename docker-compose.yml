@@ -34,7 +34,7 @@ slave:
     - MESOS_ISOLATOR=cgroups/cpu,cgroups/mem
     - MESOS_LOG_DIR=/var/log
     - MESOS_RESOURCES=ports(*):[31000-31100]
-    - MESOS_MODULES=file:///isolator/build/isolator/modules.json
+    - MESOS_MODULES=file:///calico/modules.json
     - MESOS_ISOLATION=com_mesosphere_mesos_NetworkIsolator
     - MESOS_HOOKS=com_mesosphere_mesos_NetworkHook
     - ETCD_AUTHORITY=etcd:4001

@@ -9,9 +9,10 @@ echo "Launching cluster with network isolation modules enabled..."
 
 pushd $PROJECT_DIR
 docker-compose up -d
+docker-compose scale slave=2
 popd
 
-$PROJECT_DIR/add-container-route.sh
+$DEMO_DIR/add-container-route.sh
 
 echo ""
 echo "Done."
