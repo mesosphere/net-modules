@@ -18,7 +18,7 @@ ADD ./calico_isolator /isolator/
 ADD ./configure.ac /isolator/
 ADD ./Makefile.am /isolator/
 ADD ./requirements.txt /isolator/
-COPY ./calico-node-v0.5.4.tar /isolator/
+COPY ./calico-node-v0.6.0.tar /isolator/
 
 WORKDIR /isolator
 
@@ -58,7 +58,7 @@ VOLUME /var/lib/docker
 ###################
 # Calico
 ###################
-RUN wget https://github.com/projectcalico/calico-docker/releases/download/v0.5.4/calicoctl && \
+RUN wget https://github.com/projectcalico/calico-docker/releases/download/v0.6.0/calicoctl && \
     chmod +x calicoctl && \
     mv calicoctl /usr/local/bin/
 
