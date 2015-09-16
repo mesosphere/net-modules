@@ -10,14 +10,14 @@ docker-compose:
 images: calico-node docker-compose
 	  ./docker-compose build;
 
-calico-node: calico-node-$(CALICO_NODE_VERSION).tar
+calico-node: calico/calico-node-$(CALICO_NODE_VERSION).tar
 
-calico-node-$(CALICO_NODE_VERSION).tar:
+calico/calico-node-$(CALICO_NODE_VERSION).tar:
 	docker pull calico/node:$(CALICO_NODE_VERSION)
-	docker save -o calico-node-$(CALICO_NODE_VERSION).tar calico/node:$(CALICO_NODE_VERSION)
+	docker save -o calico/calico-node-$(CALICO_NODE_VERSION).tar calico/node:$(CALICO_NODE_VERSION)
 
 st: images
-	for container in netmodules_marathon_1 netmodules_mesosmaster_1 netmodules_zookeeper_1 netmodules_etcd_1 netmodules_slave1_1 netmodules_slave2_1 ; do \
-		docker rm -f $$container; true; \
-	done
+	docker-compose kill
+	docker-compose rm --force
+	docker-compose pull
 	test/run_compose_st.sh

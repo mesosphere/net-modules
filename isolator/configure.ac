@@ -194,7 +194,4 @@ PROTOCOMPILER="$PROTOC_PATH/protoc"
 
 AC_SUBST(PROTOCOMPILER)
 
-# Create Modules JSON blobs.
-AC_CONFIG_FILES([isolator/modules.json], [])
-
 AC_OUTPUT

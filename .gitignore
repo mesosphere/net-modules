@@ -1,7 +1,3 @@
-calico-node-*.tar
-# First, ignore yourself.
-.gitignore
-
 # Files created by ./bootstrap.
 .reviewboardrc
 Makefile.in
@@ -27,18 +23,10 @@ missing
 # Recommended build directory.
 /build/
 
-# OSX Resource
-.DS_Store
-
 # CTags
 .tags
 .tags_sorted_by_file
 
-# Sublime
-*.sublime-project
-*.sublime-workspace
-
-# CLion
-.idea
-CMakeLists.txt
-.reviewboardrc
+# Other deps
+calico-node-*.tar
+docker-compose
