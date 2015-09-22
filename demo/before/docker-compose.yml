@@ -19,7 +19,7 @@ mesosmaster:
     - zookeeper
 
 slave:
-  image: mesosphere/slave
+  build: ../../
   privileged: true
   links:
     - mesosmaster
