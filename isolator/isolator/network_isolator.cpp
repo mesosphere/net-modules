@@ -262,6 +262,7 @@ process::Future<Option<ContainerPrepareInfo>> NetworkIsolatorProcess::prepare(
   }
 
   ContainerPrepareInfo prepareInfo;
+  prepareInfo.set_namespaces(CLONE_NEWNET);
 
   Environment::Variable* variable =
     prepareInfo.mutable_environment()->add_variables();
