@@ -6,19 +6,7 @@ VAGRANTFILE_API_VERSION = "2"
 Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
 
   # Every Vagrant virtual environment requires a box to build off of.
-  config.vm.box     = "ubuntu/trusty64"
-
-  # Mesos and Marathon UI ports.
-  config.vm.network "forwarded_port", guest: 5050, host: 5050
-  config.vm.network "forwarded_port", guest: 8080, host: 8080
-
-  # Visualizer tasks use these ports.
-  config.vm.network "forwarded_port", guest: 9001, host: 9001
-  config.vm.network "forwarded_port", guest: 9002, host: 9002
-
-  # This port is for the "before" part of the demo.  Docker will map it to
-  # slave1 port 9001, where the collector starts in the "before" demo.
-  config.vm.network "forwarded_port", guest: 9003, host: 9003
+  config.vm.box     = "boxcutter/ubuntu1404-desktop"
 
   # Create a private network, which allows host-only access to the machine
   # using a specific IP.
@@ -32,6 +20,7 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
   # Provider-specific configuration so you can fine-tune various
   # backing providers for Vagrant. These expose provider-specific options.
   config.vm.provider "virtualbox" do |vb|
+    vb.gui = true
     vb.customize ["modifyvm", :id, "--cpus", "4"]
     vb.customize ["modifyvm", :id, "--memory", "4096"]
     vb.customize ["modifyvm", :id, "--natnet1", "10.1.1.0/24"]
@@ -98,14 +87,6 @@ SCRIPT
   config.vm.provision "shell", inline: $install_demo_viz_forwarding
 
   config.vm.provision "shell", inline: $install_kernel_modules
-
-  config.vm.provision "docker" do |d|
-    d.pull_images "mesosphere/mesos-modules-dev:latest"
-    d.pull_images "mesosphere/mesos-modules-dev-phusion:latest"
-    d.pull_images "mesosphere/marathon:v0.9.1"
-    d.pull_images "jplock/zookeeper:3.4.5"
-    d.pull_images "spikecurtis/single-etcd"
-  end
 
   config.vm.provision "shell", inline: $get_netmodules_source, privileged: false
 

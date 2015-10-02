@@ -8,7 +8,8 @@ docker-compose:
 	  chmod +x ./docker-compose
 
 images: calico-node docker-compose
-	  ./docker-compose build;
+	  ./docker-compose pull
+	  ./docker-compose build
 
 calico-node: calico/calico-node-$(CALICO_NODE_VERSION).tar
 
@@ -17,7 +18,6 @@ calico/calico-node-$(CALICO_NODE_VERSION).tar:
 	docker save -o calico/calico-node-$(CALICO_NODE_VERSION).tar calico/node:$(CALICO_NODE_VERSION)
 
 st: images
-	docker-compose kill
-	docker-compose rm --force
-	docker-compose pull
+	./docker-compose kill
+	./docker-compose rm --force
 	test/run_compose_st.sh
