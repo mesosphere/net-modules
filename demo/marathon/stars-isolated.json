@@ -57,7 +57,7 @@
       "ports": [],
       "labels": {
         "network_isolator.netgroups": "star-1,star-2,public",
-        "network_isolator.ip": "192.168.255.253"
+        "network_isolator.ip": "192.168.255.252"
       }
     }
   ]
