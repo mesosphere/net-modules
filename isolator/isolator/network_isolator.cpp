@@ -194,7 +194,15 @@ process::Future<Option<ContainerPrepareInfo>> NetworkIsolatorProcess::prepare(
   LOG(INFO) << "NetworkIsolator::prepare for container: " << containerId;
 
   if (!executorInfo.has_container()) {
-    LOG(INFO) << "NetworkIsolator:: executorInfo.container missing for "
+    LOG(INFO) << "NetworkIsolator::prepare Ignoring request as "
+              << "executorInfo.container is missing for container: "
+              << containerId;
+    return None();
+  }
+
+  if (executorInfo.container().network_infos().size() == 0) {
+    LOG(INFO) << "NetworkIsolator::prepare Ignoring request as "
+              << "executorInfo.container.network_infos is missing for "
               << "container: " << containerId;
     return None();
   }
@@ -287,8 +295,9 @@ process::Future<Nothing> NetworkIsolatorProcess::isolate(
     pid_t pid)
 {
   if (!infos->contains(containerId)) {
-    LOG(ERROR) << "Unknown container id: " << containerId;
-    return Failure("Unknown container id: " + containerId.value());
+    LOG(INFO) << "NetworkIsolator::isolate Ignoring isolate request for unknown"
+              << " container: " << containerId;
+    return Nothing();
   }
   const Info* info = (*infos)[containerId];
 
@@ -318,7 +327,8 @@ process::Future<Nothing> NetworkIsolatorProcess::cleanup(
     const ContainerID& containerId)
 {
   if (!infos->contains(containerId)) {
-    LOG(WARNING) << "Ignoring cleanup for unknown container " << containerId;
+    LOG(INFO) << "NetworkIsolator::isolate Ignoring cleanup request for unknown"
+              << " container: " << containerId;
     return Nothing();
   }
 
