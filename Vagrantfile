@@ -27,20 +27,6 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
   end
 
   # Post-create configuration follows.
-
-  $install_docker = <<SCRIPT
-    echo Installing docker gpg key...
-    wget -qO- https://get.docker.com/gpg | sudo apt-key add -
-
-    echo Installing docker...
-    wget -qO- https://get.docker.com/ | sh
-
-    echo Checking whether 'docker ps' works...
-    docker ps
-
-    echo Finished installing docker.
-SCRIPT
-
   $install_docker_compose = <<SCRIPT
     echo Installing docker-compose...
     wget -qO- https://github.com/docker/compose/releases/download/1.3.3/docker-compose-`uname -s`-`uname -m` > /usr/local/bin/docker-compose
@@ -80,7 +66,7 @@ SCRIPT
     echo Finished installing net-modules src
 SCRIPT
 
-  config.vm.provision "shell", inline: $install_docker
+  config.vm.provision "docker"
 
   config.vm.provision "shell", inline: $install_docker_compose
 
@@ -89,5 +75,7 @@ SCRIPT
   config.vm.provision "shell", inline: $install_kernel_modules
 
   config.vm.provision "shell", inline: $get_netmodules_source, privileged: false
+
+  config.vm.provision "shell", inline: "reboot"
 
 end
