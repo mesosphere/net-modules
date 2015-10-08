@@ -210,12 +210,6 @@ process::Future<Option<ContainerPrepareInfo>> NetworkIsolatorProcess::prepare(
 
   NetworkInfo networkInfo = executorInfo.container().network_infos(0);
 
-  if (networkInfo.groups().size() <= 0) {
-    return Failure(
-        "netgroup label not found for executor: " +
-        executorInfo.executor_id().value());
-  }
-
   if (networkInfo.has_protocol() && networkInfo.has_ip_address()) {
     return Failure(
         "NetworkIsolator: Both protocol and ip_address set in NetworkInfo.");
