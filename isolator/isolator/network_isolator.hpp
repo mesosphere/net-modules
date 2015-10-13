@@ -99,6 +99,12 @@ public:
   process::Future<Nothing> cleanup(
       const ContainerID& containerId);
 
+  process::Future<Nothing> updateSlaveInfo(const SlaveInfo& slaveInfo_)
+  {
+    slaveInfo.CopyFrom(slaveInfo_);
+    return Nothing();
+  }
+
 private:
   NetworkIsolatorProcess(
       const std::string& ipamClientPath_,
@@ -109,6 +115,7 @@ private:
   const std::string isolatorClientPath;
   const Parameters parameters;
   std::string hostname;
+  SlaveInfo slaveInfo;
 };
 
 
@@ -183,6 +190,13 @@ public:
     return dispatch(process.get(),
                     &NetworkIsolatorProcess::cleanup,
                     containerId);
+  }
+
+  process::Future<Nothing> updateSlaveInfo(const SlaveInfo& slaveInfo)
+  {
+    return dispatch(process.get(),
+                    &NetworkIsolatorProcess::updateSlaveInfo,
+                    slaveInfo);
   }
 
 private:

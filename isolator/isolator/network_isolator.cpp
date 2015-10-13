@@ -50,6 +50,7 @@
 
 #include <mesos/slave/isolator.hpp>
 
+#include <process/dispatch.hpp>
 #include <process/future.hpp>
 #include <process/io.hpp>
 #include <process/owned.hpp>
@@ -83,6 +84,7 @@ const char* pythonPath = "/usr/bin/python";
 hashmap<ContainerID, Info*> *infos = NULL;
 hashmap<ExecutorID, ContainerID> *executorContainerIds = NULL;
 
+Try<Isolator*> networkIsolator = (Isolator*) NULL;
 
 template <typename InProto, typename OutProto>
 static Try<OutProto> runCommand(const string& path, const InProto& command)
@@ -176,13 +178,7 @@ NetworkIsolatorProcess::NetworkIsolatorProcess(
   : ipamClientPath(ipamClientPath_),
     isolatorClientPath(isolatorClientPath_),
     parameters(parameters_)
-{
-  Try<string> result = net::getHostname(self().address.ip);
-  if (result.isError()) {
-    LOG(FATAL) << "Failed to get hostname: " << result.error();
-  }
-  hostname = result.get();
-}
+{}
 
 
 process::Future<Option<ContainerPrepareInfo>> NetworkIsolatorProcess::prepare(
@@ -239,7 +235,7 @@ process::Future<Option<ContainerPrepareInfo>> NetworkIsolatorProcess::prepare(
 
     IPAMReserveIPMessage ipamMessage;
     IPAMReserveIPMessage::Args* ipamArgs = ipamMessage.mutable_args();
-    ipamArgs->set_hostname(hostname);
+    ipamArgs->set_hostname(slaveInfo.hostname());
     ipamArgs->add_ipv4_addrs(ipAddress);
     ipamArgs->set_uid(uid);
     ipamArgs->mutable_netgroups()->CopyFrom(networkInfo.groups());
@@ -256,7 +252,7 @@ process::Future<Option<ContainerPrepareInfo>> NetworkIsolatorProcess::prepare(
   } else {
     IPAMRequestIPMessage ipamMessage;
     IPAMRequestIPMessage::Args* ipamArgs = ipamMessage.mutable_args();
-    ipamArgs->set_hostname(hostname);
+    ipamArgs->set_hostname(slaveInfo.hostname());
     ipamArgs->set_num_ipv4(1);
     ipamArgs->set_uid(uid);
 
@@ -303,7 +299,7 @@ process::Future<Nothing> NetworkIsolatorProcess::isolate(
 
   IsolatorIsolateMessage isolatorMessage;
   IsolatorIsolateMessage::Args* isolatorArgs = isolatorMessage.mutable_args();
-  isolatorArgs->set_hostname(hostname);
+  isolatorArgs->set_hostname(slaveInfo.hostname());
   isolatorArgs->set_container_id(containerId.value());
   isolatorArgs->set_pid(pid);
   isolatorArgs->add_ipv4_addrs(info->ipAddress);
@@ -345,7 +341,7 @@ process::Future<Nothing> NetworkIsolatorProcess::cleanup(
   }
 
   IsolatorCleanupMessage isolatorMessage;
-  isolatorMessage.mutable_args()->set_hostname(hostname);
+  isolatorMessage.mutable_args()->set_hostname(slaveInfo.hostname());
   isolatorMessage.mutable_args()->set_container_id(containerId.value());
 
   Try<IsolatorResponse> isolatorResponse =
@@ -369,13 +365,13 @@ static Isolator* createNetworkIsolator(const Parameters& parameters)
     executorContainerIds = new hashmap<ExecutorID, ContainerID>();
   }
 
-  Try<Isolator*> result = NetworkIsolatorProcess::create(parameters);
+  networkIsolator = NetworkIsolatorProcess::create(parameters);
 
-  if (result.isError()) {
+  if (networkIsolator.isError()) {
     return NULL;
   }
 
-  return result.get();
+  return networkIsolator.get();
 }
 
 
@@ -383,6 +379,21 @@ static Isolator* createNetworkIsolator(const Parameters& parameters)
 class NetworkHook : public Hook
 {
 public:
+  // We use this hook to get the hostname setup for the Slave.
+  virtual Result<Labels> slaveRunTaskLabelDecorator(
+      const TaskInfo& taskInfo,
+      const ExecutorInfo& executorInfo,
+      const FrameworkInfo& frameworkInfo,
+      const SlaveInfo& slaveInfo)
+  {
+    static bool slaveInfoInitialized = false;
+    if (!slaveInfoInitialized) {
+      NetworkIsolator *isolator = (NetworkIsolator*) networkIsolator.get();
+      isolator->updateSlaveInfo(slaveInfo).await();
+    }
+    return None();
+  }
+
   virtual Result<TaskStatus> slaveTaskStatusDecorator(
       const FrameworkID& frameworkId,
       const TaskStatus& status)
