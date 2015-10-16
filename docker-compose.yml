@@ -54,4 +54,4 @@ marathon:
     - zookeeper
 
 etcd:
-  image: spikecurtis/single-etcd
+  image: spikecurtis/single-etcd:2.0.9
