@@ -8,11 +8,11 @@
           "parameters": [
             {
               "key": "isolator_command",
-              "value": "/calico/calico_isolator"
+              "value": "/calico/calico_mesos"
             },
             {
               "key": "ipam_command",
-              "value": "/calico/calico_isolator"
+              "value": "/calico/calico_mesos"
             }
           ]
         },

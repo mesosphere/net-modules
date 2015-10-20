@@ -23,13 +23,6 @@ RUN curl -sSL https://get.docker.com/ | sh
 # Define additional metadata for our image.
 VOLUME /var/lib/docker
 
-###################
-# Calico
-###################
-RUN wget https://github.com/projectcalico/calico-docker/releases/download/v0.6.0/calicoctl && \
-    chmod +x calicoctl && \
-    mv calicoctl /usr/local/bin/
-
 #######################
 # Star (test workload)
 #######################
@@ -81,4 +74,9 @@ RUN ./bootstrap && \
 # Calico
 ######################
 COPY ./calico/ /calico/
-
+RUN wget https://github.com/projectcalico/calico-docker/releases/download/v0.8.0/calicoctl && \
+    chmod +x calicoctl && \
+    mv calicoctl /usr/local/bin/
+RUN wget https://github.com/projectcalico/calico-mesos/releases/download/v0.1.1/calico_mesos && \
+    chmod +x calico_mesos && \
+    mv calico_mesos /calico/
