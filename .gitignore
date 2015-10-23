@@ -19,6 +19,7 @@ lt~obsolete.m4
 missing
 
 *.pyc
+*.swp
 
 # Recommended build directory.
 /build/
@@ -30,3 +31,6 @@ missing
 # Other deps
 calico-node-*.tar
 docker-compose
+
+# RPMs
+packages/rpms
