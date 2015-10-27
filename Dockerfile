@@ -1,4 +1,4 @@
-FROM mesosphere/mesos-modules-dev-phusion:0.25.0-rc1
+FROM spikecurtis/mesos-modules-dev-phusion:taskinfo-container
 MAINTAINER Spike Curtis <spike@projectcalico.org>
 
 ####################

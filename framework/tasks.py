@@ -7,7 +7,7 @@ from constants import TASK_CPUS, TASK_MEM
 
 class Task(object):
     def __init__(self, ip=None, netgroups=[], slave=None, calico=True,
-                 *args, **kwargs):
+                 default_executor=False, *args, **kwargs):
         if ip:
             assert calico, "Must use Calico Networking if spawning task " \
                            "with specific IP"
@@ -24,6 +24,7 @@ class Task(object):
         self.ip = ip
         self.netgroups = netgroups
         self.calico = calico
+        self.default_executor = default_executor
 
 
     def as_new_mesos_task(self):
@@ -49,19 +50,24 @@ class Task(object):
         mem.type = mesos_pb2.Value.SCALAR
         mem.scalar.value = TASK_MEM
 
-        # create the executor
-        executor = mesos_pb2.ExecutorInfo()
-        executor.executor_id.value = "execute Task %s" % self.task_id
-        executor.command.value = "python %s" % self.executor_script
-        executor.name = "Test Executor for Task %s" % self.task_id
-        executor.source = "python_test"
-        executor.container.type = mesos_pb2.ContainerInfo.MESOS
-        task.executor.MergeFrom(executor)
-
-        self.executor_id = executor.executor_id.value
+        if not self.default_executor:
+            executor = mesos_pb2.ExecutorInfo()
+            executor.executor_id.value = "execute Task %s" % self.task_id
+            executor.command.value = "python %s" % self.executor_script
+            executor.name = "Test Executor for Task %s" % self.task_id
+            executor.source = "python_test"
+            executor.container.type = mesos_pb2.ContainerInfo.MESOS
+            task.executor.MergeFrom(executor)
+            self.executor_id = executor.executor_id.value
+        else:
+            task.container.type = mesos_pb2.ContainerInfo.MESOS
 
         if self.calico:
-            network_info = task.executor.container.network_infos.add()
+            if not self.default_executor:
+                network_info = task.executor.container.network_infos.add()
+            else:
+                network_info = task.container.network_infos.add()
+
             for netgroup in self.netgroups:
                 network_info.groups.append(netgroup)
             if self.ip:
@@ -126,19 +132,21 @@ class PingTask(Task):
 
     def as_new_mesos_task(self):
         task = super(PingTask, self).as_new_mesos_task()
+        if not self.default_executor:
+            task_type_label = task.labels.labels.add()
+            task_type_label.key = "task_type"
+            task_type_label.value = "ping"
 
-        task_type_label = task.labels.labels.add()
-        task_type_label.key = "task_type"
-        task_type_label.value = "ping"
+            can_ping_label = task.labels.labels.add()
+            can_ping_label.key = "can_ping"
+            can_ping_label.value = ",".join([target.ip for target in self.can_ping_targets])
 
-        can_ping_label = task.labels.labels.add()
-        can_ping_label.key = "can_ping"
-        can_ping_label.value = ",".join([target.ip for target in self.can_ping_targets])
-
-        cant_ping_label = task.labels.labels.add()
-        cant_ping_label.key = "cant_ping"
-        cant_ping_label.value = ",".join([target.ip for target in self.cant_ping_targets])
-
+            cant_ping_label = task.labels.labels.add()
+            cant_ping_label.key = "cant_ping"
+            cant_ping_label.value = ",".join([target.ip for target in self.cant_ping_targets])
+        else:
+            command = " && ".join(["ping -c 1 %s" % target.ip for target in self.can_ping_targets])
+            task.command.value = command
         return task
 
     @property
@@ -180,6 +188,9 @@ class NetcatListenTask(Task):
         port_range.begin = self.port
         port_range.end = self.port
 
+        if self.default_executor:
+            task.command.value = "nc -l 0.0.0.0 %s & sleep 10; ! kill -0 $!" % self.port
+
         return task
 
     @property
@@ -218,6 +229,8 @@ class NetcatSendTask(Task):
         can_cat_label.value = ",".join([" ".join([target.ip, str(target.port)]) \
                                         for target in self.can_cat_targets])
 
+        if self.default_executor:
+            task.command.value = "printf hi | nc %s %s" % (target.ip, target.port)
         return task
 
     @property
@@ -247,9 +260,12 @@ class SleepTask(Task):
         """
         task = super(SleepTask, self).as_new_mesos_task()
 
-        task_type_label = task.labels.labels.add()
-        task_type_label.key = "task_type"
-        task_type_label.value = "sleep"
+        if not self.default_executor:
+            task_type_label = task.labels.labels.add()
+            task_type_label.key = "task_type"
+            task_type_label.value = "sleep"
+        else:
+            task.command.value = "sleep 20"
 
         return task
 

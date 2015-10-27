@@ -439,7 +439,7 @@ class TestScheduler(mesos.interface.Scheduler):
                   mesos_pb2.TaskState.Name(calico_task.state),
                   calico_task)
 
-        if not update.healthy:
+        if calico_task.state in BAD_TASK_STATES:
             _log.error(
                 "\t%s is in unexpected state %s with message '%s'",
                 calico_task,
@@ -567,46 +567,51 @@ if __name__ == "__main__":
 
     scheduler = TestScheduler(implicitAcknowledgements)
 
-    # Same netgroups can ping on same host
+    test_name = "Same-Host Same-Netgroups Can Ping"
     sleep_task = SleepTask(netgroups=['netgroup_a'], slave=0)
-    ping_task = PingTask(netgroups=['netgroup_a'],
-                         can_ping_targets=[sleep_task], slave=0)
-    test = TestCase([sleep_task, ping_task],
-                    name="Same-Host Different-Netgroups Can Ping One Another")
-    scheduler.tests.append(test)
+    ping_task = PingTask(netgroups=['netgroup_a'], slave=0,
+                         can_ping_targets=[sleep_task])
+    scheduler.tests.append(TestCase([sleep_task, ping_task], name=test_name))
 
-    # Same netgroups can ping across different hosts
+    test_name = "Same-Host Different-Netgroups Can't Ping"
     sleep_task = SleepTask(netgroups=['netgroup_a'], slave=0)
-    ping_task = PingTask(netgroups=['netgroup_a'],
-                         can_ping_targets=[sleep_task], slave=1)
-    test = TestCase([sleep_task, ping_task],
-                    name="Different-Host Same-Netgroups Can Ping One Another")
-    scheduler.tests.append(test)
+    ping_task = PingTask(netgroups=['netgroup_b'], slave=0,
+                         cant_ping_targets=[sleep_task])
+    scheduler.tests.append(TestCase([sleep_task, ping_task], name=test_name))
 
-    # Different netgroups cant ping on same host
+    test_name = "Different-Host Same-Netgroups Can Ping"
     sleep_task = SleepTask(netgroups=['netgroup_a'], slave=0)
-    ping_task = PingTask(netgroups=['netgroup_b'],
-                         cant_ping_targets=[sleep_task], slave=0)
-    test = TestCase([sleep_task, ping_task],
-                    name="Same-Host Different-Netgroups Can't Ping")
-    scheduler.tests.append(test)
+    ping_task = PingTask(netgroups=['netgroup_a'], slave=1,
+                         can_ping_targets=[sleep_task])
+    scheduler.tests.append(TestCase([sleep_task, ping_task], name=test_name))
 
-    # Tasks without calico can still use original Mesos Networking
+    test_name = "Different-Host Same-Netgroups Can Ping (Default Executor)"
+    sleep_task = SleepTask(netgroups=['netgroup_a'], slave=0,
+                           default_executor=True)
+    ping_task = PingTask(netgroups=['netgroup_a'], slave=1,
+                         default_executor=True,
+                         can_ping_targets=[sleep_task])
+    scheduler.tests.append(TestCase([sleep_task, ping_task], name=test_name))
+
+    test_name = "Tasks that Opt-out of Calico can Communicate"
     sleep_task = NetcatListenTask()
     cat_task = NetcatSendTask(can_cat_targets=[sleep_task])
-    test = TestCase([sleep_task, cat_task], name="netcat test")
-    scheduler.tests.append(test)
+    scheduler.tests.append(TestCase([sleep_task, cat_task], name=test_name))
 
-    # Multiple netgroup Test
+    test_name = "Tasks that Opt-out of Calico can Communicate (Default Executor)"
+    sleep_task = NetcatListenTask(default_executor=True)
+    cat_task = NetcatSendTask(can_cat_targets=[sleep_task], default_executor=True)
+    scheduler.tests.append(TestCase([sleep_task, cat_task], name=test_name))
+
+    test_name = "Multiple Netgroup Task Can Ping Each"
     sleep_task_1 = SleepTask(netgroups=['netgroup_a'])
     sleep_task_2 = SleepTask(netgroups=['netgroup_b'])
     ping_task = PingTask(netgroups=['netgroup_a', 'netgroup_b'],
                          can_ping_targets=[sleep_task_1, sleep_task_2])
-    test = TestCase([sleep_task_1, sleep_task_2, ping_task],
-                    name="Multiple Netgroup Task Can Ping Each")
+    test = TestCase([sleep_task_1, sleep_task_2, ping_task], name=test_name)
     scheduler.tests.append(test)
 
-    # Netgroup mesh topology
+    test_name = "Netgroup Mesh"
     sleep_task_a_b = SleepTask(netgroups=['netgroup_a', 'netgroup_b'])
     sleep_task_b = SleepTask(netgroups=['netgroup_b'])
     sleep_task_a = SleepTask(netgroups=['netgroup_a'])
@@ -625,7 +630,7 @@ if __name__ == "__main__":
                      ping_task_a,
                      ping_task_b,
                      ping_task_a_b],
-                    "Test Netgroup Mesh")
+                    name=test_name)
     scheduler.tests.append(test)
 
     # Same IPs fail
