@@ -533,10 +533,9 @@ class TestScheduler(mesos.interface.Scheduler):
 
 
 def get_host_ip():
-    interface_dump = subprocess.check_output(["ifconfig", "eth0"])
-    re_find_ip = r'inet addr:(\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3})'
-    result = re.findall(re_find_ip, interface_dump)
-    return result.pop()
+    ip = subprocess.Popen('ip route get 8.8.8.8 | head -1 | cut -d\' \' -f8',
+                          shell=True, stdout=subprocess.PIPE).stdout.read()
+    return ip.strip()
 
 
 class NotEnoughResources(Exception):
