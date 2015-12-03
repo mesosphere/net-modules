@@ -31,6 +31,3 @@ missing
 # Other deps
 calico-node-*.tar
 docker-compose
-
-# RPMs
-packages/rpms

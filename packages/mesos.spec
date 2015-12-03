@@ -1,5 +1,5 @@
 Name:          mesos
-Version:       0.25.0
+Version:       0.26.0
 Release:       1.custom
 Summary:       Cluster manager for sharing distributed application frameworks
 License:       ASL 2.0
@@ -7,7 +7,9 @@ URL:           http://mesos.apache.org/
 
 ExclusiveArch: x86_64
 
-Source0:       https://github.com/apache/mesos/archive/%{version}.tar.gz
+%define mesos_github_tag 0.26.0
+
+Source0:       %{mesos_github_tag}.tar.gz
 Source1:       %{name}
 Source2:       %{name}-master
 Source3:       %{name}-slave
@@ -100,8 +102,8 @@ The python-%{name} package contains Python bindings for %{name}.
 
 ##############################################
 
-%prep
-%setup -q
+%prep -n %{mesos_github_tag}
+%setup -n %{name}-%{mesos_github_tag}
 
 
 ##%if %unbundled
@@ -134,7 +136,7 @@ export LDFLAGS="$RPM_LD_FLAGS -L$PWD/libev-%{libevver}/.libs"
 %endif
 
 %configure --disable-java --disable-optimize --without-included-zookeeper --with-glog=/usr/local --with-protobuf=/usr --with-boost=/usr/local --prefix=/usr
-make -j 6
+make -j 2
 
 
 %install
@@ -263,6 +265,9 @@ exit 0
 
 
 %changelog
+* Tue Dec 22 2015 Dan Osborne <daniel.osborne@metaswitch.com> - 0.26.0-1.custom
+- Build mesos 0.26.0
+
 * Wed Oct 21 2015 Thibault Cohen <thibault.cohen@nuance.com> - 0.25.0-1.custom
 - Build mesos 0.25.0
 

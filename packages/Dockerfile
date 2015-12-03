@@ -64,31 +64,24 @@ RUN mkdir -p /usr/share/java/
 RUN wget http://search.maven.org/remotecontent?filepath=com/google/protobuf/protobuf-java/2.5.0/protobuf-java-2.5.0.jar -O /usr/share/java/protobuf.jar
 
 # MESOS Sources
-RUN mkdir -p /root/rpmbuild/SOURCES/
 WORKDIR /root/rpmbuild/SOURCES/
-RUN wget https://github.com/apache/mesos/archive/0.25.0.tar.gz
-ADD ./sources/mesos/mesos /root/rpmbuild/SOURCES/mesos
-ADD ./sources/mesos/mesos-master /root/rpmbuild/SOURCES/mesos-master
-ADD ./sources/mesos/mesos-slave /root/rpmbuild/SOURCES/mesos-slave
-ADD ./sources/mesos/mesos-master.service /root/rpmbuild/SOURCES/mesos-master.service
-ADD ./sources/mesos/mesos-slave.service /root/rpmbuild/SOURCES/mesos-slave.service
-ADD ./sources/mesos/quorum /root/rpmbuild/SOURCES/quorum
-ADD ./sources/mesos/work_dir /root/rpmbuild/SOURCES/work_dir
-ADD ./sources/mesos/mesos-init-wrapper /root/rpmbuild/SOURCES/mesos-init-wrapper
-ADD ./sources/mesos/zk /root/rpmbuild/SOURCES/zk
+# Note: Changes to mesos source URL should also be reflected in the
+# mesos_github_tag var in packages/mesos.spec
+RUN wget https://github.com/apache/mesos/archive/0.26.0.tar.gz
+ADD ./sources/mesos/ /root/rpmbuild/SOURCES/
 
 # MESOS
 ADD ./mesos.spec /root/mesos.spec
-
 RUN rpmbuild -ba /root/mesos.spec
+RUN yum localinstall -y /root/rpmbuild/RPMS/x86_64/mesos-*.rpm /root/rpmbuild/RPMS/x86_64/mesos-devel-*.rpm
+RUN cp -r /usr/include/mesos/* /usr/include/
 
+# Copy the compiled mesos rpms to a safe place so that when the build directory
+# is later mounted for netmodules, we don't lose the mesos core rpms
+RUN mkdir /opt/mesos-rpms && cp /root/rpmbuild/RPMS/x86_64/mesos-*.rpm /opt/mesos-rpms/
 
 # NET MODULES
-RUN wget https://github.com/mesosphere/net-modules/archive/integration/0.25.zip
-RUN yum localinstall -y /root/rpmbuild/RPMS/x86_64/mesos-0*.rpm /root/rpmbuild/RPMS/x86_64/mesos-devel-*.rpm
-
-RUN cp -r /usr/include/mesos/* /usr/include/
 ADD ./net-modules.spec /root/net-modules.spec
-RUN rpmbuild -ba /root/net-modules.spec
-
-RUN mkdir -p /opt/rpms
+ADD ./sources/net-modules/ /root/rpmbuild/SOURCES/
+ADD build_netmodules_rpm.sh /usr/bin
+CMD build_netmodules_rpm.sh
