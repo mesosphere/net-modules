@@ -1,10 +1,11 @@
-FROM mesosphere/mesos-modules-dev-phusion
+FROM djosborne/mesos-modules-dev-phusion:0.26.0
 MAINTAINER Spike Curtis <spike@projectcalico.org>
 
 ####################
 # Mesos-DNS
 ####################
-RUN wget https://dl.dropboxusercontent.com/u/4550074/mesos/mesos-dns+50fc45a9 -O /usr/bin/mesos-dns && \
+RUN curl -LO https://github.com/mesosphere/mesos-dns/releases/download/v0.5.0/mesos-dns-v0.5.0-linux-amd64 && \
+    mv mesos-dns-v0.5.0-linux-amd64 /usr/bin/mesos-dns && \
     chmod +x /usr/bin/mesos-dns
 
 ###################
@@ -22,13 +23,6 @@ RUN curl -sSL https://get.docker.com/ | sh
 
 # Define additional metadata for our image.
 VOLUME /var/lib/docker
-
-###################
-# Calico
-###################
-RUN wget https://github.com/projectcalico/calico-docker/releases/download/v0.6.0/calicoctl && \
-    chmod +x calicoctl && \
-    mv calicoctl /usr/local/bin/
 
 #######################
 # Star (test workload)
@@ -81,4 +75,9 @@ RUN ./bootstrap && \
 # Calico
 ######################
 COPY ./calico/ /calico/
-
+RUN wget https://github.com/projectcalico/calico-docker/releases/download/v0.8.0/calicoctl && \
+    chmod +x calicoctl && \
+    mv calicoctl /usr/local/bin/
+RUN wget https://github.com/projectcalico/calico-mesos/releases/download/v0.1.1/calico_mesos && \
+    chmod +x calico_mesos && \
+    mv calico_mesos /calico/

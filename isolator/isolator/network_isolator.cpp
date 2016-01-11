@@ -50,6 +50,7 @@
 
 #include <mesos/slave/isolator.hpp>
 
+#include <process/dispatch.hpp>
 #include <process/future.hpp>
 #include <process/io.hpp>
 #include <process/owned.hpp>
@@ -79,16 +80,11 @@ using mesos::slave::Isolator;
 const char* ipamClientKey = "ipam_command";
 const char* isolatorClientKey = "isolator_command";
 const char* pythonPath = "/usr/bin/python";
-const char* ipAddressLabelKey = "MesosContainerizer.NetworkSettings.IPAddress";
-
-const char* ipLabelKey = "network_isolator.ip";
-const char* netgroupsLabelKey = "network_isolator.netgroups";
 
 hashmap<ContainerID, Info*> *infos = NULL;
 hashmap<ExecutorID, ContainerID> *executorContainerIds = NULL;
-hashmap<ExecutorID, string> *executorNetgroups = NULL;
-hashmap<ExecutorID, string> *executorIPs = NULL;
 
+Try<Isolator*> networkIsolator = (Isolator*) NULL;
 
 template <typename InProto, typename OutProto>
 static Try<OutProto> runCommand(const string& path, const InProto& command)
@@ -103,7 +99,7 @@ static Try<OutProto> runCommand(const string& path, const InProto& command)
       process::Subprocess::PIPE());
   CHECK_SOME(child);
 
-  string jsonCommand = stringify(JSON::Protobuf(command));
+  string jsonCommand = stringify(JSON::protobuf(command));
 
   LOG(INFO) << "Sending command to " + path + ": " << jsonCommand;
   process::io::write(child.get().in().get(), jsonCommand);
@@ -182,13 +178,7 @@ NetworkIsolatorProcess::NetworkIsolatorProcess(
   : ipamClientPath(ipamClientPath_),
     isolatorClientPath(isolatorClientPath_),
     parameters(parameters_)
-{
-  Try<string> result = net::getHostname(self().address.ip);
-  if (result.isError()) {
-    LOG(FATAL) << "Failed to get hostname: " << result.error();
-  }
-  hostname = result.get();
-}
+{}
 
 
 process::Future<Option<ContainerPrepareInfo>> NetworkIsolatorProcess::prepare(
@@ -199,76 +189,141 @@ process::Future<Option<ContainerPrepareInfo>> NetworkIsolatorProcess::prepare(
 {
   LOG(INFO) << "NetworkIsolator::prepare for container: " << containerId;
 
-  if (!executorNetgroups->contains(executorInfo.executor_id())) {
-    return Failure(
-        "netgroup label not found for executor: " +
-        executorInfo.executor_id().value());
+  if (!executorInfo.has_container()) {
+    LOG(INFO) << "NetworkIsolator::prepare Ignoring request as "
+              << "executorInfo.container is missing for container: "
+              << containerId;
+    return None();
   }
 
-  string ipAddress;
+  if (executorInfo.container().network_infos().size() == 0) {
+    LOG(INFO) << "NetworkIsolator::prepare Ignoring request as "
+              << "executorInfo.container.network_infos is missing for "
+              << "container: " << containerId;
+    return None();
+  }
+
+  if (executorInfo.container().network_infos().size() > 1) {
+    return Failure(
+        "NetworkIsolator:: multiple NetworkInfos are not supported.");
+  }
+
+  NetworkInfo networkInfo = executorInfo.container().network_infos(0);
+
+  if (networkInfo.has_protocol()) {
+    return Failure(
+      "NetworkIsolator: NetworkInfo.protocol is deprecated and unsupported.");
+  }
+  if (networkInfo.has_ip_address()) {
+    return Failure(
+      "NetworkIsolator: NetworkInfo.ip_address is deprecated and"
+      " unsupported.");
+  }
+
   string uid = UUID::random().toString();
 
-  vector<string> netgroups =
-    strings::tokenize((*executorNetgroups)[executorInfo.executor_id()], ",");
-  if (netgroups.size() == 0) {
-    LOG(INFO) << "No netgroups assigned";
-    //TODO(kapil): Should we assign a "default" netgroup here?
+  // Two IPAM commands:
+  // 1) reserve for IPs the user has specifically asked for.
+  // 2) auto-assign IPs.
+  // Spin through all IPAddress messages once to get info for each command.
+  // Then we'll issue each command if needed.
+  IPAMReserveIPMessage reserveMessage;
+  IPAMReserveIPMessage::Args* reserveArgs = reserveMessage.mutable_args();
+
+  // Counter of IPs to auto assign.
+  int numIPv4 = 0;
+  foreach (const NetworkInfo::IPAddress& ipAddress, networkInfo.ip_addresses()) {
+    if (ipAddress.has_ip_address() && ipAddress.has_protocol()) {
+      return Failure("NetworkIsolator: Cannot include both ip_address and "
+                     "protocol in a request.");
+    }
+    if (ipAddress.has_ip_address()) {
+      // Store IP to attempt to reserve.
+      reserveArgs->add_ipv4_addrs(ipAddress.ip_address());
+    } else if (ipAddress.has_protocol() &&
+               ipAddress.protocol() == NetworkInfo::IPv6){
+      return Failure("NetworkIsolator: IPv6 is not supported at this time.");
+    } else {
+      // Either protocol is IPv4, or not included (in which case we default to
+      // IPv4 anyway).
+      numIPv4++;
+    }
   }
 
-  if (executorIPs->contains(executorInfo.executor_id())) {
-    ipAddress = (*executorIPs)[executorInfo.executor_id()];
+  if (!(reserveArgs->ipv4_addrs_size() + numIPv4)) {
+    return Failure(
+      "NetworkIsolator: Container requires at least one IP address.");
+  }
 
-    IPAMReserveIPMessage ipamMessage;
-    IPAMReserveIPMessage::Args* ipamArgs = ipamMessage.mutable_args();
-    ipamArgs->set_hostname(hostname);
-    ipamArgs->add_ipv4_addrs(ipAddress);
-    ipamArgs->set_uid(uid);
+  // All the IP addresses, both reserved and allocated.
+  vector<string> allAddresses;
 
-    foreach (const string& netgroup, netgroups) {
-      ipamArgs->add_netgroups(netgroup);
-    }
+  // Reserve provided IPs first.
+  if (reserveArgs->ipv4_addrs_size()) {
+    reserveArgs->set_hostname(slaveInfo.hostname());
+    reserveArgs->set_uid(uid);
+    reserveArgs->mutable_netgroups()->CopyFrom(networkInfo.groups());
 
-    LOG(INFO) << "Sending IP request command to IPAM";
+    LOG(INFO) << "Sending IP reserve command to IPAM";
     Try<IPAMResponse> response =
       runCommand<IPAMReserveIPMessage, IPAMResponse>(
-          ipamClientPath, ipamMessage);
+          ipamClientPath, reserveMessage);
     if (response.isError()) {
       return Failure("Error reserving IPs with IPAM: " + response.error());
     }
 
-    LOG(INFO) << "IP " << ipAddress << " reserved with IPAM";
-  } else {
-    IPAMRequestIPMessage ipamMessage;
-    IPAMRequestIPMessage::Args* ipamArgs = ipamMessage.mutable_args();
-    ipamArgs->set_hostname(hostname);
-    ipamArgs->set_num_ipv4(1);
-    ipamArgs->set_uid(uid);
-
-    foreach (const string& netgroup, netgroups) {
-      ipamArgs->add_netgroups(netgroup);
+    string addresses = "";
+    foreach (const string& addr, reserveArgs->ipv4_addrs()) {
+      addresses = addresses + addr + " ";
+      allAddresses.push_back(addr);
     }
+    LOG(INFO) << "IP(s) " << addresses << "reserved with IPAM";
+  }
+
+  // Request for IPs the user has asked to auto-assign.
+  if (numIPv4) {
+    IPAMRequestIPMessage requestMessage;
+    IPAMRequestIPMessage::Args* requestArgs = requestMessage.mutable_args();
+    requestArgs->set_num_ipv4(numIPv4);
+    requestArgs->set_hostname(slaveInfo.hostname());
+    requestArgs->set_uid(uid);
+
+    requestArgs->mutable_netgroups()->CopyFrom(networkInfo.groups());
 
     LOG(INFO) << "Sending IP request command to IPAM";
     Try<IPAMResponse> response =
-      runCommand<IPAMRequestIPMessage, IPAMResponse>(ipamClientPath, ipamMessage);
+      runCommand<IPAMRequestIPMessage, IPAMResponse>(
+          ipamClientPath, requestMessage);
     if (response.isError()) {
       return Failure("Error allocating IP from IPAM: " + response.error());
     } else if (response.get().ipv4().size() == 0) {
       return Failure("No IPv4 addresses received from IPAM.");
     }
 
-    LOG(INFO) << "Got IP " << response.get().ipv4(0) << " from IPAM.";
-    ipAddress = response.get().ipv4(0);
+    string addresses = "";
+    foreach (const string& addr, response.get().ipv4()) {
+      addresses = addresses + addr + " ";
+      allAddresses.push_back(addr);
+    }
+    LOG(INFO) << "IP(s) " << addresses << "allocated with IPAM.";
+  }
+
+  vector<string> netgroups;
+  foreach (const string& group, networkInfo.groups()) {
+    netgroups.push_back(group);
   }
 
   ContainerPrepareInfo prepareInfo;
+  prepareInfo.set_namespaces(CLONE_NEWNET);
 
   Environment::Variable* variable =
     prepareInfo.mutable_environment()->add_variables();
   variable->set_name("LIBPROCESS_IP");
-  variable->set_value(ipAddress);
+  // If more than one IP is available, just use the first.  LIBPROCESS just
+  // needs one, it doesn't matter which.
+  variable->set_value(allAddresses.front());
 
-  (*infos)[containerId] = new Info(ipAddress, netgroups, uid);
+  (*infos)[containerId] = new Info(allAddresses, netgroups, uid);
   (*executorContainerIds)[executorInfo.executor_id()] = containerId;
 
   return prepareInfo;
@@ -280,17 +335,20 @@ process::Future<Nothing> NetworkIsolatorProcess::isolate(
     pid_t pid)
 {
   if (!infos->contains(containerId)) {
-    LOG(ERROR) << "Unknown container id: " << containerId;
-    return Failure("Unknown container id: " + containerId.value());
+    LOG(INFO) << "NetworkIsolator::isolate Ignoring isolate request for unknown"
+              << " container: " << containerId;
+    return Nothing();
   }
   const Info* info = (*infos)[containerId];
 
   IsolatorIsolateMessage isolatorMessage;
   IsolatorIsolateMessage::Args* isolatorArgs = isolatorMessage.mutable_args();
-  isolatorArgs->set_hostname(hostname);
+  isolatorArgs->set_hostname(slaveInfo.hostname());
   isolatorArgs->set_container_id(containerId.value());
   isolatorArgs->set_pid(pid);
-  isolatorArgs->add_ipv4_addrs(info->ipAddress);
+  foreach (const string& addr, info->ipAddresses) {
+    isolatorArgs->add_ipv4_addrs(addr);
+  }
   // isolatorArgs->add_ipv6_addrs();
   foreach (const string& netgroup, info->netgroups) {
     isolatorArgs->add_netgroups(netgroup);
@@ -311,16 +369,21 @@ process::Future<Nothing> NetworkIsolatorProcess::cleanup(
     const ContainerID& containerId)
 {
   if (!infos->contains(containerId)) {
-    LOG(WARNING) << "Ignoring cleanup for unknown container " << containerId;
+    LOG(INFO) << "NetworkIsolator::isolate Ignoring cleanup request for unknown"
+              << " container: " << containerId;
     return Nothing();
   }
 
   const Info* info = (*infos)[containerId];
 
+  string addresses = "";
   IPAMReleaseIPMessage ipamMessage;
-  ipamMessage.mutable_args()->add_ips(info->ipAddress);
+  foreach (const string& addr, info->ipAddresses) {
+    ipamMessage.mutable_args()->add_ips(addr);
+    addresses = addresses + addr + " ";
+  }
 
-  LOG(INFO) << "Requesting IPAM to release IP: " << info->ipAddress;
+  LOG(INFO) << "Requesting IPAM to release IPs: " << addresses;
   Try<IPAMResponse> response =
     runCommand<IPAMReleaseIPMessage, IPAMResponse>(ipamClientPath, ipamMessage);
   if (response.isError()) {
@@ -328,7 +391,7 @@ process::Future<Nothing> NetworkIsolatorProcess::cleanup(
   }
 
   IsolatorCleanupMessage isolatorMessage;
-  isolatorMessage.mutable_args()->set_hostname(hostname);
+  isolatorMessage.mutable_args()->set_hostname(slaveInfo.hostname());
   isolatorMessage.mutable_args()->set_container_id(containerId.value());
 
   Try<IsolatorResponse> isolatorResponse =
@@ -350,19 +413,15 @@ static Isolator* createNetworkIsolator(const Parameters& parameters)
     infos = new hashmap<ContainerID, Info*>();
     CHECK(executorContainerIds == NULL);
     executorContainerIds = new hashmap<ExecutorID, ContainerID>();
-    CHECK(executorNetgroups == NULL);
-    executorNetgroups = new hashmap<ExecutorID, string>();
-    CHECK(executorIPs == NULL);
-    executorIPs = new hashmap<ExecutorID, string>();
   }
 
-  Try<Isolator*> result = NetworkIsolatorProcess::create(parameters);
+  networkIsolator = NetworkIsolatorProcess::create(parameters);
 
-  if (result.isError()) {
+  if (networkIsolator.isError()) {
     return NULL;
   }
 
-  return result.get();
+  return networkIsolator.get();
 }
 
 
@@ -370,29 +429,22 @@ static Isolator* createNetworkIsolator(const Parameters& parameters)
 class NetworkHook : public Hook
 {
 public:
+  // We use this hook to get the hostname setup for the Slave.
   virtual Result<Labels> slaveRunTaskLabelDecorator(
       const TaskInfo& taskInfo,
       const ExecutorInfo& executorInfo,
       const FrameworkInfo& frameworkInfo,
       const SlaveInfo& slaveInfo)
   {
-    LOG(INFO) << "NetworkHook:: run task label decorator";
-    if (taskInfo.has_labels()) {
-      foreach (const Label& label, taskInfo.labels().labels()) {
-        if (label.key() == netgroupsLabelKey) {
-          (*executorNetgroups)[executorInfo.executor_id()] = label.value();
-          LOG(INFO) << "Label: <" << label.key() << ":" << label.value() << ">";
-        }
-        if (label.key() == ipLabelKey) {
-          (*executorIPs)[executorInfo.executor_id()] = label.value();
-          LOG(INFO) << "Label: <" << label.key() << ":" << label.value() << ">";
-        }
-      }
+    static bool slaveInfoInitialized = false;
+    if (!slaveInfoInitialized) {
+      NetworkIsolator *isolator = (NetworkIsolator*) networkIsolator.get();
+      isolator->updateSlaveInfo(slaveInfo).await();
     }
     return None();
   }
 
-  virtual Result<Labels> slaveTaskStatusLabelDecorator(
+  virtual Result<TaskStatus> slaveTaskStatusDecorator(
       const FrameworkID& frameworkId,
       const TaskStatus& status)
   {
@@ -417,19 +469,19 @@ public:
 
     const Info* info = (*infos)[containerId];
 
-    Labels labels;
-    if (status.has_labels()) {
-      labels.CopyFrom(status.labels());
+    TaskStatus result;
+    NetworkInfo* networkInfo =
+      result.mutable_container_status()->add_network_infos();
+    string addresses = "";
+    foreach (const string& addr, info->ipAddresses) {
+      NetworkInfo::IPAddress* ipAddress = networkInfo->add_ip_addresses();
+      ipAddress->set_ip_address(addr);
+      ipAddress->set_protocol(NetworkInfo::IPv4);
+      addresses = addresses + addr + " ";
     }
 
-    // Set IPAddress label.
-    Label* label = labels.add_labels();
-    label->set_key(ipAddressLabelKey);
-    label->set_value(info->ipAddress);
-
-    LOG(INFO) << "NetworkHook:: added label "
-              << label->key() << ":" << label->value();
-    return labels;
+    LOG(INFO) << "NetworkHook:: added ip address(es) " << addresses;
+    return result;
   }
 };
 

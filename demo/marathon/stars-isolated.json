@@ -1,5 +1,5 @@
 {
-  "id": "star-iso",
+  "id": "/star-iso",
   "apps": [
     {
       "id": "probe-a",
@@ -7,9 +7,8 @@
       "cmd": "chmod u+x ./star-probe* && ./star-probe-v0.5.0-linux-x86_64 --urls=http://probe-b-star-iso.marathon.mesos:9000/status,http://probe-c-star-iso.marathon.mesos:9000/status,http://probe-d-star-iso.marathon.mesos:9000/status",
       "cpus": 0.1,
       "mem": 64.0,
-      "ports": [],
-      "labels": {
-      "network_isolator.netgroups": "star-1"
+      "ipAddress": {
+        "groups": ["star-1"]
       }
     },
     {
@@ -18,9 +17,8 @@
       "cmd": "chmod u+x ./star-probe* && ./star-probe-v0.5.0-linux-x86_64 --urls=http://probe-a-star-iso.marathon.mesos:9000/status,http://probe-c-star-iso.marathon.mesos:9000/status,http://probe-d-star-iso.marathon.mesos:9000/status",
       "cpus": 0.1,
       "mem": 64.0,
-      "ports": [],
-      "labels": {
-        "network_isolator.netgroups": "star-1"
+      "ipAddress": {
+        "groups": ["star-1"]
       }
     },
     {
@@ -29,9 +27,8 @@
       "cmd": "chmod u+x ./star-probe* && ./star-probe-v0.5.0-linux-x86_64 --urls=http://probe-a-star-iso.marathon.mesos:9000/status,http://probe-b-star-iso.marathon.mesos:9000/status,http://probe-d-star-iso.marathon.mesos:9000/status",
       "cpus": 0.1,
       "mem": 64.0,
-      "ports": [],
-      "labels": {
-        "network_isolator.netgroups": "star-2"
+      "ipAddress": {
+        "groups": ["star-2"]
       }
     },
     {
@@ -40,9 +37,8 @@
       "cmd": "chmod u+x ./star-probe* && ./star-probe-v0.5.0-linux-x86_64 --urls=http://probe-a-star-iso.marathon.mesos:9000/status,http://probe-b-star-iso.marathon.mesos:9000/status,http://probe-c-star-iso.marathon.mesos:9000/status",
       "cpus": 0.1,
       "mem": 64.0,
-      "ports": [],
-      "labels": {
-        "network_isolator.netgroups": "star-2"
+      "ipAddress": {
+        "groups": ["star-2"]
       }
     },
     {
@@ -54,10 +50,8 @@
       "cmd": "chmod u+x ./star-collect* && ./star-collect-v0.5.0-linux-x86_64 --resources-file=star-iso-resources.json",
       "cpus": 0.2,
       "mem": 64.0,
-      "ports": [],
-      "labels": {
-        "network_isolator.netgroups": "star-1,star-2,public",
-        "network_isolator.ip": "192.168.255.252"
+      "ipAddress": {
+        "groups": ["public", "star-1", "star-2"]
       }
     }
   ]

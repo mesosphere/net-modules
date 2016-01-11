@@ -59,15 +59,15 @@ namespace mesos {
 
 struct Info
 {
-  Info(const std::string& _ipAddress,
+  Info(const std::vector<std::string>& _ipAddresses,
        const std::vector<std::string>& _netgroups,
        const std::string& _uid)
-    : ipAddress(_ipAddress),
+    : ipAddresses(_ipAddresses),
       netgroups(_netgroups),
       uid(_uid) {}
 
-  // The IP address to assign to the container, or NONE for auto-assignment.
-  const std::string ipAddress;
+  // The IP addresses to assign to the container.
+  const std::vector<std::string> ipAddresses;
 
   // The network profile name to assign to the container, or NONE for the
   // default.
@@ -99,6 +99,12 @@ public:
   process::Future<Nothing> cleanup(
       const ContainerID& containerId);
 
+  process::Future<Nothing> updateSlaveInfo(const SlaveInfo& slaveInfo_)
+  {
+    slaveInfo.CopyFrom(slaveInfo_);
+    return Nothing();
+  }
+
 private:
   NetworkIsolatorProcess(
       const std::string& ipamClientPath_,
@@ -109,6 +115,7 @@ private:
   const std::string isolatorClientPath;
   const Parameters parameters;
   std::string hostname;
+  SlaveInfo slaveInfo;
 };
 
 
@@ -125,11 +132,6 @@ public:
   {
     terminate(process.get());
     wait(process.get());
-  }
-
-  virtual process::Future<Option<int>> namespaces()
-  {
-    return CLONE_NEWNET;
   }
 
   virtual process::Future<Nothing> recover(
@@ -188,6 +190,13 @@ public:
     return dispatch(process.get(),
                     &NetworkIsolatorProcess::cleanup,
                     containerId);
+  }
+
+  process::Future<Nothing> updateSlaveInfo(const SlaveInfo& slaveInfo)
+  {
+    return dispatch(process.get(),
+                    &NetworkIsolatorProcess::updateSlaveInfo,
+                    slaveInfo);
   }
 
 private:
