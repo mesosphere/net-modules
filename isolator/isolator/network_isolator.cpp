@@ -50,7 +50,6 @@
 
 #include <mesos/slave/isolator.hpp>
 
-#include <process/dispatch.hpp>
 #include <process/future.hpp>
 #include <process/io.hpp>
 #include <process/owned.hpp>
@@ -59,6 +58,7 @@
 
 #include <stout/hashmap.hpp>
 #include <stout/option.hpp>
+#include <stout/os/exists.hpp>
 #include <stout/protobuf.hpp>
 #include <stout/stringify.hpp>
 #include <stout/try.hpp>
@@ -77,14 +77,14 @@ using std::vector;
 using mesos::slave::ContainerPrepareInfo;
 using mesos::slave::Isolator;
 
-const char* ipamClientKey = "ipam_command";
-const char* isolatorClientKey = "isolator_command";
-const char* pythonPath = "/usr/bin/python";
+static const char* ipamClientKey = "ipam_command";
+static const char* isolatorClientKey = "isolator_command";
 
-hashmap<ContainerID, Info*> *infos = NULL;
-hashmap<ExecutorID, ContainerID> *executorContainerIds = NULL;
+static hashmap<ContainerID, Info*> *infos = NULL;
+static hashmap<ExecutorID, ContainerID> *executorContainerIds = NULL;
+static bool isolatorActivated = false;
 
-Try<Isolator*> networkIsolator = (Isolator*) NULL;
+static Try<Isolator*> networkIsolator = (Isolator*) NULL;
 
 template <typename InProto, typename OutProto>
 static Try<OutProto> runCommand(const string& path, const InProto& command)
@@ -154,20 +154,40 @@ Try<Isolator*> NetworkIsolatorProcess::create(const Parameters& parameters)
 {
   string ipamClientPath;
   string isolatorClientPath;
+  bool ipamPathSpecified = false;
+  bool isolatorPathSpecified = false;
   foreach (const Parameter& parameter, parameters.parameter()) {
     if (parameter.key() == ipamClientKey) {
-      ipamClientPath = parameter.value();
+      ipamPathSpecified = true;
     } else if (parameter.key() == isolatorClientKey) {
+      isolatorPathSpecified = true;
       isolatorClientPath = parameter.value();
     }
   }
-  if (ipamClientPath.empty()) {
+
+  if (!ipamPathSpecified) {
     LOG(WARNING) << "IPAM path not specified";
     return Error("IPAM path not specified.");
   }
+
+  if (!isolatorPathSpecified) {
+    LOG(WARNING) << "Isolator path not specified";
+    return Error("Isolator path not specified.");
+  }
+
+  if (os::exists(ipamClientPath) && os::exists(isolatorClientPath)) {
+    isolatorActivated = true;
+  } else {
+    LOG(WARNING) << "IPAM ('" << ipamClientPath << "') or "
+                 << "Isolator ('" << isolatorClientPath << "') path doesn't "
+                 << "exist; module 'com_mesosphere_mesos_NetworkIsolator' "
+                 << "will not be activated";
+  }
+
   return new NetworkIsolator(process::Owned<NetworkIsolatorProcess>(
       new NetworkIsolatorProcess(
-          ipamClientPath, isolatorClientPath, parameters)));
+          ipamClientPath, isolatorClientPath, parameters)),
+      isolatorActivated);
 }
 
 
@@ -436,6 +456,10 @@ public:
       const FrameworkInfo& frameworkInfo,
       const SlaveInfo& slaveInfo)
   {
+    if (!isolatorActivated) {
+      return None();
+    }
+
     static bool slaveInfoInitialized = false;
     if (!slaveInfoInitialized) {
       NetworkIsolator *isolator = (NetworkIsolator*) networkIsolator.get();
@@ -448,6 +472,10 @@ public:
       const FrameworkID& frameworkId,
       const TaskStatus& status)
   {
+    if (!isolatorActivated) {
+      return None();
+    }
+
     LOG(INFO) << "NetworkHook::task status label decorator";
 
     if (!status.has_executor_id()) {

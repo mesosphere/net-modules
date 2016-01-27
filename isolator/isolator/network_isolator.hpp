@@ -122,16 +122,23 @@ private:
 class NetworkIsolator : public mesos::slave::Isolator
 {
 public:
-  NetworkIsolator(process::Owned<NetworkIsolatorProcess> process_)
-    : process(process_)
+  NetworkIsolator(
+      process::Owned<NetworkIsolatorProcess> process_,
+      bool activated_)
+    : process(process_),
+      activated(activated_)
   {
-    spawn(CHECK_NOTNULL(process.get()));
+    if (activated) {
+      spawn(CHECK_NOTNULL(process.get()));
+    }
   }
 
   virtual ~NetworkIsolator()
   {
-    terminate(process.get());
-    wait(process.get());
+    if (activated) {
+      terminate(process.get());
+      wait(process.get());
+    }
   }
 
   virtual process::Future<Nothing> recover(
@@ -147,6 +154,10 @@ public:
       const std::string& directory,
       const Option<std::string>& user)
   {
+    if (!activated) {
+      return None();
+    }
+
     return dispatch(process.get(),
                     &NetworkIsolatorProcess::prepare,
                     containerId,
@@ -159,6 +170,10 @@ public:
       const ContainerID& containerId,
       pid_t pid)
   {
+    if (!activated) {
+      return Nothing();
+    }
+
     return dispatch(process.get(),
                     &NetworkIsolatorProcess::isolate,
                     containerId,
@@ -187,6 +202,9 @@ public:
   virtual process::Future<Nothing> cleanup(
       const ContainerID& containerId)
   {
+    if (!activated) {
+      return Nothing();
+    }
     return dispatch(process.get(),
                     &NetworkIsolatorProcess::cleanup,
                     containerId);
@@ -194,6 +212,9 @@ public:
 
   process::Future<Nothing> updateSlaveInfo(const SlaveInfo& slaveInfo)
   {
+    if (!activated) {
+      return Nothing();
+    }
     return dispatch(process.get(),
                     &NetworkIsolatorProcess::updateSlaveInfo,
                     slaveInfo);
@@ -201,7 +222,7 @@ public:
 
 private:
   process::Owned<NetworkIsolatorProcess> process;
-  const Parameters parameters;
+  bool activated;
 };
 
 } // namespace mesos {
