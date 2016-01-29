@@ -159,6 +159,7 @@ Try<Isolator*> NetworkIsolatorProcess::create(const Parameters& parameters)
   foreach (const Parameter& parameter, parameters.parameter()) {
     if (parameter.key() == ipamClientKey) {
       ipamPathSpecified = true;
+      ipamClientPath = parameter.value();
     } else if (parameter.key() == isolatorClientKey) {
       isolatorPathSpecified = true;
       isolatorClientPath = parameter.value();
