@@ -31,6 +31,7 @@ proxy:
 
 slavepublic:
   build: .
+  dockerfile: demo.Dockerfile
   privileged: true
   links:
     - mesosmaster
@@ -56,6 +57,7 @@ slavepublic:
 
 slave:
   build: .
+  dockerfile: demo.Dockerfile
   privileged: true
   links:
     - mesosmaster
