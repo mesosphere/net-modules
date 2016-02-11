@@ -4,6 +4,14 @@ The first implementation in this repository showcases Apache Mesos using Project
 
 We recommend running the demo from a Linux host, specifically Ubuntu 14.04-desktop. A Vagrant file has been provided to create this environment.
 
+## Versioning
+The following table provides information on which Netmodules branches/releases are compatible with which version of Mesos:
+
+| Mesos Version | Netmodules Version |
+|---------------|--------------------|
+| 0.27.0        | 0.2.x              |
+| 0.26.0        | 0.1.x              |
+
 ## Setup
 ### Vagrant Setup
 
