@@ -1,4 +1,4 @@
-FROM djosborne/mesos-modules-dev-phusion:0.26.0
+FROM djosborne/mesos-modules-dev-phusion:0.27.0
 MAINTAINER Dan Osborne <dan@projectcalico.org>
 
 ####################
