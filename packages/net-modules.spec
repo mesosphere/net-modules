@@ -1,5 +1,5 @@
 Name:          net-modules
-Version:       0.26
+Version:       0.2.0
 Release:       1.custom
 Summary:       Network isolation modules for Apache Mesos
 License:       ASL 2.0
@@ -53,6 +53,9 @@ install %{SOURCE2} %{buildroot}%{_sysconfdir}/mesos-slave/
 %{_sysconfdir}/mesos-slave/hooks
 
 %changelog
+* Tue Feb 16 2016 Dan Osborne <daniel.osborne@metaswitch.com> - 0.2.0-1.custom
+- Build netmoudules 0.2.0
+
 * Tue Dec 22 2015 Dan Osborne <daniel.osborne@metaswitch.com> - 0.26-1.custom
 - Build mesos 0.26.0
 

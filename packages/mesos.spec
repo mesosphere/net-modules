@@ -1,5 +1,5 @@
 Name:          mesos
-Version:       0.26.0
+Version:       0.27.0
 Release:       1.custom
 Summary:       Cluster manager for sharing distributed application frameworks
 License:       ASL 2.0
@@ -7,7 +7,7 @@ URL:           http://mesos.apache.org/
 
 ExclusiveArch: x86_64
 
-%define mesos_github_tag 0.26.0
+%define mesos_github_tag 0.27.0
 
 Source0:       %{mesos_github_tag}.tar.gz
 Source1:       %{name}
@@ -202,6 +202,10 @@ mkdir -p -m0755 %{buildroot}/%{_var}/lib/%{name}
 %doc LICENSE NOTICE
 %{_libdir}/libmesos*.so
 %{_libdir}/libfixed_resource_estimator-%{version}.so
+%{_libdir}/libload_qos_controller-0.27.0.so
+%{_libdir}/libload_qos_controller.so
+%{_libdir}/liblogrotate_container_logger-0.27.0.so
+%{_libdir}/liblogrotate_container_logger.so
 %{_bindir}/mesos*
 %{_sbindir}/mesos-*
 %{_datadir}/%{name}/
@@ -215,7 +219,7 @@ mkdir -p -m0755 %{buildroot}/%{_var}/lib/%{name}
 %{_sysconfdir}/%{name}-master/*
 %{_sysconfdir}/%{name}-slave
 %{_sysconfdir}/%{name}/*
-
+%{_includedir}/picojson.h
 
 ######################
 %files devel
@@ -265,6 +269,9 @@ exit 0
 
 
 %changelog
+* Tue Feb 16 2016 Dan Osborne <daniel.osborne@metaswitch.com> - 0.27.0-1.custom
+- Build mesos 0.27.0
+
 * Tue Dec 22 2015 Dan Osborne <daniel.osborne@metaswitch.com> - 0.26.0-1.custom
 - Build mesos 0.26.0
 
