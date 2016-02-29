@@ -342,6 +342,7 @@ process::Future<Option<ContainerLaunchInfo>> NetworkIsolatorProcess::prepare(
     reserveArgs->set_hostname(slaveInfo.hostname());
     reserveArgs->set_uid(uid);
     reserveArgs->mutable_netgroups()->CopyFrom(networkInfo.groups());
+    reserveArgs->mutable_labels()->CopyFrom(networkInfo.labels().labels());
 
     LOG(INFO) << "Sending IP reserve command to IPAM";
     Try<IPAMResponse> response =
@@ -359,8 +360,6 @@ process::Future<Option<ContainerLaunchInfo>> NetworkIsolatorProcess::prepare(
     LOG(INFO) << "IP(s) " << addresses << "reserved with IPAM";
   }
 
-  reserveArgs->mutable_labels()->CopyFrom(networkInfo.labels());
-
   // Request for IPs the user has asked to auto-assign.
   if (numIPv4) {
     IPAMRequestIPMessage requestMessage;
@@ -370,7 +369,7 @@ process::Future<Option<ContainerLaunchInfo>> NetworkIsolatorProcess::prepare(
     requestArgs->set_uid(uid);
 
     requestArgs->mutable_netgroups()->CopyFrom(networkInfo.groups());
-    requestArgs->mutable_labels()->CopyFrom(networkInfo.labels());
+    requestArgs->mutable_labels()->CopyFrom(networkInfo.labels().labels());
 
     LOG(INFO) << "Sending IP request command to IPAM";
     Try<IPAMResponse> response =
@@ -396,6 +395,7 @@ process::Future<Option<ContainerLaunchInfo>> NetworkIsolatorProcess::prepare(
   }
 
   Labels labels = networkInfo.labels();
+  labels.CopyFrom(networkInfo.labels());
 
   ContainerLaunchInfo launchInfo;
   launchInfo.set_namespaces(CLONE_NEWNET);
@@ -437,7 +437,7 @@ process::Future<Nothing> NetworkIsolatorProcess::isolate(
   foreach (const string& netgroup, info->netgroups) {
     isolatorArgs->add_netgroups(netgroup);
   }
-  isolatorArgs->mutable_labels()->CopyFrom(info->labels);
+  isolatorArgs->mutable_labels()->CopyFrom(info->labels.labels());
 
   LOG(INFO) << "Sending isolate command to Isolator";
   Try<IsolatorResponse> response =
