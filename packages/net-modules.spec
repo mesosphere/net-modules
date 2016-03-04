@@ -33,13 +33,12 @@ The first implementation in this repository showcases Apache Mesos using Project
 ./bootstrap
 
 %configure --with-mesos=/usr/include/mesos/ --with-protobuf=/usr
-make
+make -j 2
 
 %install
-ls -R %{buildroot}
-echo %{buildroot} 
-mkdir -p %{buildroot}/opt/net-modules
-cp -v .libs/* %{buildroot}/opt/net-modules/
+%make_install
+
+rm -f %{buildroot}%{_libdir}/mesos/*.la
 
 mkdir -p %{buildroot}%{_sysconfdir}/mesos-slave
 install %{SOURCE1} %{buildroot}%{_sysconfdir}/mesos-slave/
@@ -47,8 +46,7 @@ install %{SOURCE2} %{buildroot}%{_sysconfdir}/mesos-slave/
 
 ############################################
 %files
-/opt/net-modules/*
-/opt/net-modules/libmesos_network_isolator.so
+%{_libdir}/mesos/libmesos_network_isolator*.so
 %{_sysconfdir}/mesos-slave/isolation
 %{_sysconfdir}/mesos-slave/hooks
 

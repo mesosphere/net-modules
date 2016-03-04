@@ -21,6 +21,7 @@ images: calico-node docker-compose
 clean:
 	./docker-compose kill
 	./docker-compose rm --force
+	rm -rf build
 
 st: clean images
 	test/run_compose_st.sh
@@ -35,8 +36,10 @@ framework: cluster
 
 rpm: dist/mesos.rpm
 dist/mesos.rpm: $(wildcard packages/*)
+	rm -rf build/rpm
 	docker build -t mesos-builder ./packages
-	mkdir -p build
+	mkdir -p build/mesos-netmodules-rpms
 	docker run \
-	-v `pwd`/build:/root/rpmbuild/RPMS/x86_64/ \
+	-v `pwd`/build/mesos-netmodules-rpms:/root/rpmbuild/RPMS/x86_64/ \
 	-v `pwd`/isolator:/tmp/isolator:ro mesos-builder
+	tar -C build -czf build/mesos-netmodules-rpms.tar mesos-netmodules-rpms
