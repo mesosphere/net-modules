@@ -26,7 +26,7 @@ We recommend running the demo from a Linux host, specifically Ubuntu 14.04-deskt
         cd net-modules
         vagrant up
 
-4. Ensure you wait until the Vagrant script has completed succesfully before [moving onto the Demo](#demo).
+4. Ensure you wait until the Vagrant script has completed succesfully before [moving onto the Demo](#demo-1).
 
 _Note: the shell provision step contains steps that must be performed each time the VM is booted.  Append the `--provision-with shell` flag when running `vagrant up` or `vagrant reload` when booting the VM subsequent times._
 
