@@ -3,7 +3,7 @@ zookeeper:
   hostname: zookeeper
 
 mesosmaster:
-  image: djosborne/mesos-modules-dev:0.27.0
+  image: mesosphere/mesos-modules-dev:0.27.1
   hostname: mesosmaster
   command: /mesos/build/bin/mesos-master.sh
   environment:
@@ -22,7 +22,6 @@ mesosmaster:
 
 slave:
   build: .
-  dockerfile: demo.Dockerfile
   privileged: true
   links:
     - mesosmaster
