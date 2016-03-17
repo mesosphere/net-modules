@@ -1,5 +1,5 @@
 Name:          mesos
-Version:       0.27.0
+Version:       0.28.0
 Release:       1.custom
 Summary:       Cluster manager for sharing distributed application frameworks
 License:       ASL 2.0
@@ -7,7 +7,7 @@ URL:           http://mesos.apache.org/
 
 ExclusiveArch: x86_64
 
-%define mesos_github_tag 0.27.0
+%define mesos_github_tag 0.28.0
 
 Source0:       %{mesos_github_tag}.tar.gz
 Source1:       %{name}
@@ -167,6 +167,7 @@ popd
 
 # fedora guidelines no .a|.la
 rm -f %{buildroot}%{_libdir}/*.la
+rm -f %{buildroot}%{_libdir}/mesos/modules/*.la
 rm -f %{buildroot}%{_libdir}/libexamplemodule*
 rm -f %{buildroot}%{_libdir}/libtest*
 
@@ -201,9 +202,10 @@ mkdir -p -m0755 %{buildroot}/%{_var}/lib/%{name}
 %doc LICENSE NOTICE
 %{_libdir}/libmesos*.so
 %{_libdir}/libfixed_resource_estimator-%{version}.so
-%{_libdir}/libload_qos_controller-0.27.0.so
+%{_libdir}/mesos/modules/*.so
+%{_libdir}/libload_qos_controller-%{version}.so
 %{_libdir}/libload_qos_controller.so
-%{_libdir}/liblogrotate_container_logger-0.27.0.so
+%{_libdir}/liblogrotate_container_logger-%{version}.so
 %{_libdir}/liblogrotate_container_logger.so
 %{_bindir}/mesos*
 %{_sbindir}/mesos-*

@@ -67,7 +67,7 @@ RUN wget http://search.maven.org/remotecontent?filepath=com/google/protobuf/prot
 WORKDIR /root/rpmbuild/SOURCES/
 # Note: Changes to mesos source URL should also be reflected in the
 # mesos_github_tag var in packages/mesos.spec
-RUN wget https://github.com/apache/mesos/archive/0.27.0.tar.gz
+RUN wget https://github.com/apache/mesos/archive/0.28.0.tar.gz
 ADD ./sources/mesos/ /root/rpmbuild/SOURCES/
 
 # MESOS
