@@ -36,10 +36,9 @@ framework: cluster
 
 rpm: dist/mesos.rpm
 dist/mesos.rpm: $(wildcard packages/*)
-	rm -rf build/rpm
+	rm -rf build
+	mkdir -p build
 	docker build -t mesos-builder ./packages
-	mkdir -p build/mesos-netmodules-rpms
 	docker run \
-	-v `pwd`/build/mesos-netmodules-rpms:/root/rpmbuild/RPMS/x86_64/ \
+	-v `pwd`/build/:/root/rpmbuild/RPMS/x86_64/ \
 	-v `pwd`/isolator:/tmp/isolator:ro mesos-builder
-	tar -C build -czf build/mesos-netmodules-rpms.tar mesos-netmodules-rpms
