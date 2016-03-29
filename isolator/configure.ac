@@ -42,7 +42,7 @@ AC_ARG_WITH([protobuf],
 
 if test -d "$mesos"; then
   MESOS_INCLUDE_PATH="-I${mesos}/include"
-  MESOS_LDFLAGS="-L${mesos}/lib64 -L${mesos}/lib -lmesos -lglog"
+  MESOS_LDFLAGS="-L${mesos}/lib64 -L${mesos}/lib"
   # Use the system default prefix if not specified.
   if test -n "`echo $with_protobuf`"; then
     PROTOC_PATH="${with_protobuf}/bin"
@@ -186,16 +186,7 @@ AC_CHECK_HEADER([picojson.h],
                 [],
                 [AC_MSG_ERROR([picojson is not installed.])])
 # Check for protobuf.
-AC_CHECK_TOOL([PROTOCOMPILER_TEST], [protoc], [], [$PROTOC_PATH])
 
 CPPFLAGS=${old_CPPFLAGS}
-
-if test -z "`echo $PROTOCOMPILER_TEST`"; then
-  AC_MSG_ERROR([protoc not found in $PROTOC_PATH])
-fi
-
-PROTOCOMPILER="$PROTOC_PATH/protoc"
-
-AC_SUBST(PROTOCOMPILER)
 
 AC_OUTPUT

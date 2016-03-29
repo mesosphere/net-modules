@@ -5,21 +5,15 @@ Summary:       Network isolation modules for Apache Mesos
 License:       ASL 2.0
 URL:           http://mesos.apache.org/
 
-ExclusiveArch: x86_64
+ExclusiveArch: i386
 
 Source0:       netmodules.tar.gz
 Source1:       isolation
 Source2:       hooks
 
-BuildRequires: libtool
 BuildRequires: python-devel
 BuildRequires: gcc-c++
-BuildRequires: glog-devel
-BuildRequires: gflags-devel
-BuildRequires: boost-devel
-BuildRequires: protobuf-devel
 BuildRequires: curl-devel
-BuildRequires: subversion-devel
 
 
 %description
@@ -32,7 +26,7 @@ The first implementation in this repository showcases Apache Mesos using Project
 %build
 ./bootstrap
 
-%configure --with-mesos=/usr/include/mesos/ --with-protobuf=/usr
+CPPFLAGS='-I/root/protobuf/protobuf-2.5.0/src/ -I/root/glog/glog-0.3.3/src/ -I/root/boost/boost-1.53.0/' ./configure --prefix=/usr --with-mesos=/
 make -j 2
 
 %install

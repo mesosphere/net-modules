@@ -15,73 +15,49 @@ RUN echo "gpgkey=http://opensource.wandisco.com/RPM-GPG-KEY-WANdisco" >> /etc/yu
 # Mesos Deps
 RUN yum groupinstall -y "Development Tools"
 RUN yum install -y \
-  apache-maven \
+   git \
   python-devel \
-  java-1.7.0-openjdk-devel \
-  zlib-devel \
   libcurl-devel \
-  openssl-devel \
-  cyrus-sasl-devel \
-  cyrus-sasl-md5 \
-  apr-devel \
-  subversion-devel \
-  apr-util-devel \
-  protobuf-devel \
-  protobuf-python \
-  boost-devel \
   python-setuptools \
-  glog-devel \
-  gflags-devel \
-  http-parser-devel \
-  gmock-devel \
-  gtest-devel \
-  gperftools-devel \
-  libev-source \
-  leveldb-devel \
-  protobuf-java \
-  zookeeper-devel \
-  picojson-devel \
   python-pip \
-  python-wheel \ 
-  automake
+  python-wheel 
 
-# Install the picojson headers
-RUN wget https://raw.githubusercontent.com/kazuho/picojson/v1.3.0/picojson.h -O /usr/local/include/picojson.h
-
-# Build & install glog
-#WORKDIR  /root
-#RUN git clone https://github.com/google/glog.git
-#WORKDIR /root/glog
-#RUN git checkout v0.3.3
-#RUN ./configure --prefix=/usr/local
-#RUN make install
 WORKDIR  /root
 
-# Prepare to build Mesos
-RUN mkdir mesos
-RUN mkdir -p /tmp
-RUN mkdir -p /usr/share/java/
-RUN wget http://search.maven.org/remotecontent?filepath=com/google/protobuf/protobuf-java/2.5.0/protobuf-java-2.5.0.jar -O /usr/share/java/protobuf.jar
+# Install Mesos
+RUN rpm -Uvh http://repos.mesosphere.com/el/7/noarch/RPMS/mesosphere-el-repo-7-1.noarch.rpm
+RUN yum -y install mesos-0.28.0
+
+# Get 3rd party dependency source files
+RUN wget https://github.com/apache/mesos/archive/0.28.0.tar.gz
+RUN tar -xvf 0.28.0.tar.gz
+
+# GLOG
+WORKDIR /root/glog
+RUN cp /root/mesos-0.28.0/3rdparty/libprocess/3rdparty/glog-0.3.3.tar.gz /root/glog
+RUN cp /root/mesos-0.28.0/3rdparty/libprocess/3rdparty/glog-0.3.3.patch /root/glog
+RUN tar -xvf glog-0.3.3.tar.gz
+WORKDIR glog-0.3.3
+RUN git apply ../glog-0.3.3.patch
+RUN ./configure
+
+# BOOST
+WORKDIR /root/boost
+RUN cp /root/mesos-0.28.0/3rdparty/libprocess/3rdparty/boost-1.53.0.tar.gz .
+RUN tar -xvf boost-1.53.0.tar.gz
+
+# PROTOBUF
+WORKDIR /root/protobuf
+RUN cp /root/mesos-0.28.0/3rdparty/libprocess/3rdparty/protobuf-2.5.0.tar.gz .
+RUN tar -xvf protobuf-2.5.0.tar.gz
+
 
 # MESOS Sources
 WORKDIR /root/rpmbuild/SOURCES/
-# Note: Changes to mesos source URL should also be reflected in the
-# mesos_github_tag var in packages/mesos.spec
-RUN wget https://github.com/apache/mesos/archive/0.27.0.tar.gz
-ADD ./sources/mesos/ /root/rpmbuild/SOURCES/
 
-# MESOS
-ADD ./mesos.spec /root/mesos.spec
-RUN rpmbuild -ba /root/mesos.spec
-RUN yum localinstall -y /root/rpmbuild/RPMS/x86_64/mesos-*.rpm /root/rpmbuild/RPMS/x86_64/mesos-devel-*.rpm
-RUN cp -r /usr/include/mesos/* /usr/include/
-
-# Copy the compiled mesos rpms to a safe place so that when the build directory
-# is later mounted for netmodules, we don't lose the mesos core rpms
-RUN mkdir /opt/mesos-rpms && cp /root/rpmbuild/RPMS/x86_64/mesos-*.rpm /opt/mesos-rpms/
 
 # NET MODULES
 ADD ./net-modules.spec /root/net-modules.spec
 ADD ./sources/net-modules/ /root/rpmbuild/SOURCES/
-ADD build_netmodules_rpm.sh /usr/bin
-CMD build_netmodules_rpm.sh
+
+CMD bash -c "tar czf netmodules.tar.gz -C /tmp isolator && rpmbuild --target=i386 -ba /root/net-modules.spec"
